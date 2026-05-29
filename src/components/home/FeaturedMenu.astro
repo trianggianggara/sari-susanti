@@ -1,0 +1,68 @@
+---
+import type { Locale } from '../../i18n/utils';
+import { useTranslations } from '../../i18n/utils';
+import SectionHeading from '../common/SectionHeading.astro';
+import type { LocalizedProduct } from '../../types/app';
+import { formatPrice } from '../../lib/format';
+import { buildWhatsAppUrl } from '../../lib/whatsapp';
+
+export interface Props {
+  locale: Locale;
+  products: LocalizedProduct[];
+}
+
+const { locale, products } = Astro.props;
+const t = useTranslations(locale);
+---
+
+<section class="section bg-ivory">
+  <div class="container">
+    <SectionHeading 
+      eyebrow={t('featured.eyebrow')}
+      title={t('featured.title')}
+      subtitle={t('featured.subtitle')}
+    />
+
+    <div class="grid-3">
+      {products.map((product, index) => (
+        <div class={`product-card reveal stagger-${(index % 3) + 1}`}>
+          <a href={`/${locale}/menu/${product.slug}`} class="product-card__image">
+            {product.is_featured && <span class="product-card__badge">{t('menu.featured')}</span>}
+            <img src={product.image_url || '/placeholder.jpg'} alt={product.name} loading="lazy" />
+          </a>
+          <div class="product-card__body">
+            <h3 class="product-card__name">
+              <a href={`/${locale}/menu/${product.slug}`}>{product.name}</a>
+            </h3>
+            <p class="product-card__desc">{product.short_description}</p>
+            <div class="product-card__footer">
+              <div class="product-card__price">
+                <span class="product-card__price-label">{t('menu.price_from')}</span>
+                <span class="product-card__price-value">{formatPrice(product.price, locale)}</span>
+              </div>
+              <a 
+                href={buildWhatsAppUrl(locale, product.name)} 
+                class="btn btn-primary btn-sm"
+                target="_blank" rel="noopener noreferrer"
+              >
+                {t('nav.order')}
+              </a>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <div class="featured-actions reveal">
+      <a href={`/${locale}/menu`} class="btn btn-secondary btn-lg">{t('featured.cta')}</a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .featured-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--space-12);
+  }
+</style>

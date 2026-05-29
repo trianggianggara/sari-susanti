@@ -1,0 +1,95 @@
+---
+import type { Locale } from '../../i18n/utils';
+import { useTranslations } from '../../i18n/utils';
+import LanguageSwitcher from './LanguageSwitcher.astro';
+
+export interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+const navItems = [
+  { label: t('nav.home'), href: `/${locale}` },
+  { label: t('nav.menu'), href: `/${locale}/menu` },
+  { label: t('nav.about'), href: `/${locale}/tentang-kami` },
+  { label: t('nav.faq'), href: `/${locale}/faq` },
+  { label: t('nav.contact'), href: `/${locale}/kontak` },
+];
+
+const currentPath = Astro.url.pathname;
+const isHome = currentPath === `/${locale}` || currentPath === `/${locale}/`;
+---
+
+<header class:list={['nav', { 'nav--solid': !isHome }]} id="main-nav">
+  <div class="container nav__inner">
+    <a href={`/${locale}`} class="nav__logo">
+      <img src="/logo.png" alt="Sari Susanti" style="border-radius: 4px;" class="nav-logo-img" />
+    </a>
+
+    <nav class="nav__links">
+      {navItems.map((item) => (
+        <a 
+          href={item.href} 
+          class:list={['nav__link', { 'is-active': currentPath === item.href || (item.href !== `/${locale}` && currentPath.startsWith(item.href)) }]}
+        >
+          {item.label}
+        </a>
+      ))}
+    </nav>
+
+    <div class="nav__actions">
+      <LanguageSwitcher locale={locale} />
+      <button class="nav__hamburger" id="nav-toggle" aria-label="Menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="nav__mobile" id="mobile-menu">
+    {navItems.map((item) => (
+      <a 
+        href={item.href} 
+        class:list={['nav__link', { 'is-active': currentPath === item.href || (item.href !== `/${locale}` && currentPath.startsWith(item.href)) }]}
+      >
+        {item.label}
+      </a>
+    ))}
+  </div>
+</header>
+
+<script>
+  // Setup navbar scroll effect and mobile menu toggle
+  document.addEventListener('DOMContentLoaded', () => {
+    const nav = document.getElementById('main-nav');
+    const toggle = document.getElementById('nav-toggle');
+    const mobileMenu = document.getElementById('mobile-menu');
+
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 20) {
+        nav?.classList.add('is-scrolled');
+      } else {
+        nav?.classList.remove('is-scrolled');
+      }
+    });
+
+    toggle?.addEventListener('click', () => {
+      mobileMenu?.classList.toggle('is-open');
+      const spans = toggle.querySelectorAll('span');
+      if (mobileMenu?.classList.contains('is-open')) {
+        nav?.classList.add('is-menu-open');
+        spans[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
+        spans[1].style.opacity = '0';
+        spans[2].style.transform = 'rotate(-45deg) translate(5px, -5px)';
+      } else {
+        nav?.classList.remove('is-menu-open');
+        spans[0].style.transform = 'none';
+        spans[1].style.opacity = '1';
+        spans[2].style.transform = 'none';
+      }
+    });
+  });
+</script>

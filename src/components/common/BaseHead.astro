@@ -1,0 +1,45 @@
+---
+import type { Locale } from '../../i18n/utils';
+import { useTranslations } from '../../i18n/utils';
+import { BRAND } from '../../lib/constants';
+
+export interface Props {
+  locale: Locale;
+  title?: string;
+  description?: string;
+  image?: string;
+}
+
+const { locale, title, description, image = '/og-image.jpg' } = Astro.props;
+const t = useTranslations(locale);
+
+const defaultTitle = t('meta.home.title');
+const defaultDescription = t('meta.home.desc');
+
+const finalTitle = title ? `${title} | ${BRAND.shortName}` : defaultTitle;
+const finalDescription = description || defaultDescription;
+---
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="generator" content={Astro.generator} />
+
+<title>{finalTitle}</title>
+<meta name="title" content={finalTitle} />
+<meta name="description" content={finalDescription} />
+
+<link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)} />
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content={Astro.url} />
+<meta property="og:title" content={finalTitle} />
+<meta property="og:description" content={finalDescription} />
+<meta property="og:image" content={new URL(image, Astro.url)} />
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:url" content={Astro.url} />
+<meta property="twitter:title" content={finalTitle} />
+<meta property="twitter:description" content={finalDescription} />
+<meta property="twitter:image" content={new URL(image, Astro.url)} />

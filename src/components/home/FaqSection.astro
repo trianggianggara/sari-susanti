@@ -1,0 +1,73 @@
+---
+import type { Locale } from '../../i18n/utils';
+import { useTranslations } from '../../i18n/utils';
+import SectionHeading from '../common/SectionHeading.astro';
+import type { LocalizedFaq } from '../../types/app';
+
+export interface Props {
+  locale: Locale;
+  faqs: LocalizedFaq[];
+}
+
+const { locale, faqs } = Astro.props;
+const t = useTranslations(locale);
+---
+
+<section class="section bg-ivory-warm">
+  <div class="container container--narrow">
+    <SectionHeading 
+      eyebrow={t('faq.eyebrow')}
+      title={t('faq.title')}
+      subtitle={t('faq.subtitle')}
+    />
+
+    <div class="faq-list reveal">
+      {faqs.map((faq, index) => (
+        <div class="faq-item">
+          <button class="faq-trigger" aria-expanded="false" aria-controls={`faq-content-${index}`}>
+            <span class="faq-question">{faq.question}</span>
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-content" id={`faq-content-${index}`}>
+            <div class="faq-answer-wrapper">
+              <div class="faq-answer">
+                {faq.answer}
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const triggers = document.querySelectorAll('.faq-trigger');
+    
+    triggers.forEach(trigger => {
+      trigger.addEventListener('click', () => {
+        const isExpanded = trigger.getAttribute('aria-expanded') === 'true';
+        const contentId = trigger.getAttribute('aria-controls');
+        const content = document.getElementById(contentId!);
+        
+        // Close all others
+        triggers.forEach(t => {
+          if (t !== trigger) {
+            t.setAttribute('aria-expanded', 'false');
+            const cId = t.getAttribute('aria-controls');
+            document.getElementById(cId!)?.classList.remove('is-open');
+          }
+        });
+
+        // Toggle current
+        trigger.setAttribute('aria-expanded', (!isExpanded).toString());
+        if (!isExpanded) {
+          content?.classList.add('is-open');
+        } else {
+          content?.classList.remove('is-open');
+        }
+      });
+    });
+  });
+</script>

@@ -1,0 +1,281 @@
+/* ═══════════════════════════════════════════════════════════════
+   SARI SUSANTI — ANIMATIONS
+   Scroll-driven reveals, entrance sequences, micro-interactions
+═══════════════════════════════════════════════════════════════ */
+
+/* ── Keyframes ─────────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(32px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleUp {
+  from { opacity: 0; transform: scale(0.90); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position: 200% 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-10px); }
+}
+
+@keyframes pulse-gold {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
+  50%       { box-shadow: 0 0 0 12px rgba(212, 175, 55, 0); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes ornament-grow {
+  from { transform: scaleX(0); opacity: 0; }
+  to   { transform: scaleX(1); opacity: 1; }
+}
+
+@keyframes leaf-sway {
+  0%, 100% { transform: rotate(-3deg); }
+  50%       { transform: rotate(3deg); }
+}
+
+@keyframes gradient-shift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ── Hero Entrance Sequence ─────────────────────────────────── */
+.hero-animate {
+  animation: fadeIn var(--duration-slower) var(--ease-out) both;
+}
+
+.hero-heading {
+  animation: fadeUp 0.8s var(--ease-smooth) 0.2s both;
+}
+
+.hero-subheading {
+  animation: fadeUp 0.8s var(--ease-smooth) 0.4s both;
+}
+
+.hero-cta {
+  animation: fadeUp 0.7s var(--ease-smooth) 0.6s both;
+}
+
+.hero-badge {
+  animation: scaleUp 0.6s var(--ease-spring) 0.1s both;
+}
+
+/* ── Scroll Reveal Classes ──────────────────────────────────── */
+/* Applied by IntersectionObserver in scroll-reveal.ts */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity var(--duration-slower) var(--ease-smooth),
+    transform var(--duration-slower) var(--ease-smooth);
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-36px);
+  transition:
+    opacity var(--duration-slower) var(--ease-smooth),
+    transform var(--duration-slower) var(--ease-smooth);
+}
+
+.reveal-left.is-visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.reveal-right {
+  opacity: 0;
+  transform: translateX(36px);
+  transition:
+    opacity var(--duration-slower) var(--ease-smooth),
+    transform var(--duration-slower) var(--ease-smooth);
+}
+
+.reveal-right.is-visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.reveal-scale {
+  opacity: 0;
+  transform: scale(0.92);
+  transition:
+    opacity var(--duration-slower) var(--ease-smooth),
+    transform var(--duration-slower) var(--ease-smooth);
+}
+
+.reveal-scale.is-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Stagger delays for grouped items */
+.stagger-1 { transition-delay: 0ms; }
+.stagger-2 { transition-delay: 80ms; }
+.stagger-3 { transition-delay: 160ms; }
+.stagger-4 { transition-delay: 240ms; }
+.stagger-5 { transition-delay: 320ms; }
+.stagger-6 { transition-delay: 400ms; }
+
+/* ── Skeleton Shimmer ───────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-sand) 25%,
+    var(--color-sand-light) 50%,
+    var(--color-sand) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+/* ── Floating WhatsApp Button ───────────────────────────────── */
+.float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.pulse-gold {
+  animation: pulse-gold 2.5s ease-in-out infinite;
+}
+
+/* ── Hover Lift ─────────────────────────────────────────────── */
+.hover-lift {
+  transition:
+    transform var(--duration-normal) var(--ease-out),
+    box-shadow var(--duration-normal) var(--ease-out);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-xl);
+}
+
+/* ── Image Zoom ─────────────────────────────────────────────── */
+.img-zoom {
+  overflow: hidden;
+}
+
+.img-zoom img {
+  transition: transform var(--duration-slow) var(--ease-out);
+}
+
+.img-zoom:hover img {
+  transform: scale(1.06);
+}
+
+/* ── Ornament Lines Animation ───────────────────────────────── */
+.ornament-line.is-visible::before {
+  animation: ornament-grow 0.8s var(--ease-smooth) 0.3s both;
+  transform-origin: right center;
+}
+
+.ornament-line.is-visible::after {
+  animation: ornament-grow 0.8s var(--ease-smooth) 0.3s both;
+  transform-origin: left center;
+}
+
+/* ── Page Transition ────────────────────────────────────────── */
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.page-enter {
+  animation: page-enter 0.5s var(--ease-smooth) both;
+}
+
+/* ── Animated Gradient Text ─────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(
+    135deg,
+    var(--color-gold-dark) 0%,
+    var(--color-gold) 40%,
+    var(--color-gold-light) 70%,
+    var(--color-gold-dark) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-shift 4s ease infinite;
+}
+
+/* ── Marquee ── */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.marquee-container {
+  overflow: hidden;
+  white-space: nowrap;
+  display: flex;
+  background: var(--color-charcoal);
+  color: var(--color-gold-pale);
+  padding: var(--space-3) 0;
+  border-top: 2px solid var(--color-charcoal);
+  border-bottom: 2px solid var(--color-charcoal);
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+
+.marquee-content {
+  display: flex;
+  animation: marquee 20s linear infinite;
+  gap: var(--space-10);
+  padding-left: var(--space-10);
+}
+
+.marquee-item {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.marquee-item::after {
+  content: '✦';
+  color: var(--color-gold);
+}

@@ -1,0 +1,115 @@
+---
+import type { Locale } from '../../i18n/utils';
+import { useTranslations } from '../../i18n/utils';
+import SectionHeading from '../common/SectionHeading.astro';
+
+export interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+---
+
+<section class="section bg-ivory-warm">
+  <div class="container container--narrow">
+    <div class="about-grid">
+      <div class="about-content reveal-left">
+        <SectionHeading 
+          eyebrow={t('about.eyebrow')}
+          title={t('about.title')}
+          align="left"
+        />
+        <p class="about-desc reveal-left stagger-1">
+          Berawal dari cinta seorang Ibu terhadap masakan tradisional Nusantara, Sari Susanti hadir untuk menyajikan kelezatan autentik di setiap momen spesial Anda.
+        </p>
+        <p class="about-desc reveal-left stagger-2">
+          Kami percaya bahwa makanan yang baik dibuat dari bahan segar, rempah pilihan, dan kasih sayang.
+        </p>
+        <div class="about-action reveal-left stagger-3">
+          <a href={`/${locale}/tentang-kami`} class="btn btn-secondary">{t('about.cta')}</a>
+        </div>
+      </div>
+      <div class="about-image reveal-right">
+        <div class="about-image-wrapper">
+          <img src="/logo.png" alt="Sari Susanti" loading="lazy" />
+          <div class="about-badge pulse-gold">
+            <span>Sejak<br/>2010</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-12);
+    align-items: center;
+  }
+
+  .about-desc {
+    font-size: var(--text-lg);
+    color: var(--color-charcoal-light);
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-4);
+  }
+
+  .about-action {
+    margin-top: var(--space-6);
+  }
+
+  .about-image {
+    position: relative;
+  }
+
+  .about-image-wrapper {
+    position: relative;
+    border-radius: var(--radius-2xl) 0 var(--radius-2xl) 0;
+    overflow: hidden;
+    box-shadow: var(--shadow-xl);
+  }
+
+  .about-image-wrapper img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4/5;
+    object-fit: cover;
+  }
+
+  .about-badge {
+    position: absolute;
+    bottom: -20px;
+    left: -20px;
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, var(--color-gold) 0%, var(--color-gold-dark) 100%);
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--color-emerald-dark);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--text-sm);
+    line-height: 1.2;
+    box-shadow: var(--shadow-gold-lg);
+  }
+
+  @media (max-width: 768px) {
+    .about-grid {
+      grid-template-columns: 1fr;
+    }
+    .about-image {
+      order: -1;
+      padding-inline: var(--space-4);
+    }
+    .about-badge {
+      left: 0;
+      bottom: -10px;
+    }
+  }
+</style>
