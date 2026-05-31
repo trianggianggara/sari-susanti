@@ -1,4 +1,5 @@
 import { createServerClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../types/database';
 
 export function createSupabaseClient(cookies: any) {
@@ -20,3 +21,8 @@ export function createSupabaseClient(cookies: any) {
     }
   );
 }
+
+export const supabasePublic = createClient<Database>(
+  import.meta.env.PUBLIC_SUPABASE_URL,
+  import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+);

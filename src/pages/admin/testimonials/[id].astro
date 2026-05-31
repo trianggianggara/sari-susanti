@@ -1,0 +1,161 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+
+export const prerender = false;
+
+let error = '';
+const { id } = Astro.params;
+const { supabase } = Astro.locals;
+
+// Fetch testimonial
+const { data: testimonial, error: fetchError } = await supabase
+  .from('testimonials')
+  .select('*')
+  .eq('id', id)
+  .single();
+
+if (fetchError || !testimonial) {
+  return Astro.redirect('/admin/testimonials');
+}
+
+if (Astro.request.method === 'POST') {
+  const formData = await Astro.request.formData();
+  
+  const customer_name = formData.get('customer_name') as string;
+  const customer_role = formData.get('customer_role') as string;
+  const content = formData.get('content') as string;
+  const content_en = formData.get('content_en') as string;
+  const rating = parseInt(formData.get('rating') as string) || 5;
+  const event_type = formData.get('event_type') as string;
+  
+  const is_active = formData.get('is_active') === 'on';
+  const is_featured = formData.get('is_featured') === 'on';
+  const sort_order = parseInt(formData.get('sort_order') as string) || 0;
+  
+  const image = formData.get('image') as File;
+
+  if (!customer_name || !content) {
+    error = 'Nama pelanggan dan isi testimoni wajib diisi.';
+  } else {
+    let customer_image_url = testimonial.customer_image_url;
+    
+    // Upload image
+    if (image && image.size > 0) {
+      const fileExt = image.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('testimonials')
+        .upload(filePath, image);
+        
+      if (uploadError) {
+        error = `Gagal upload gambar: ${uploadError.message}`;
+      } else {
+        const { data: publicUrlData } = supabase.storage.from('testimonials').getPublicUrl(filePath);
+        customer_image_url = publicUrlData.publicUrl;
+      }
+    }
+
+    if (!error) {
+      const { error: updateError } = await supabase.from('testimonials').update({
+        customer_name,
+        customer_role,
+        customer_image_url,
+        content,
+        content_en,
+        rating,
+        event_type,
+        is_active,
+        is_featured,
+        sort_order,
+        updated_at: new Date().toISOString()
+      }).eq('id', id);
+
+      if (updateError) {
+        error = updateError.message;
+      } else {
+        return Astro.redirect('/admin/testimonials');
+      }
+    }
+  }
+}
+---
+
+<AdminLayout title="Edit Testimoni">
+  <div class="max-w-[800px] bg-white p-6 rounded-lg border border-sand shadow-brand-sm">
+    <h2 class="mt-0 mb-6 text-emerald-dark font-display text-2xl">Edit Testimoni</h2>
+    
+    {error && (
+      <div class="bg-red-600 text-white p-3 rounded-md mb-4 text-sm">
+        {error}
+      </div>
+    )}
+
+    <form method="POST" enctype="multipart/form-data">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="mb-4">
+          <label class="block mb-2 font-semibold text-sm text-charcoal">Nama Pelanggan *</label>
+          <input type="text" name="customer_name" value={testimonial.customer_name} required class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none" />
+        </div>
+        <div class="mb-4">
+          <label class="block mb-2 font-semibold text-sm text-charcoal">Jabatan / Lokasi</label>
+          <input type="text" name="customer_role" value={testimonial.customer_role || ''} class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="mb-4">
+          <label class="block mb-2 font-semibold text-sm text-charcoal">Rating (1-5) *</label>
+          <input type="number" name="rating" min="1" max="5" value={testimonial.rating} required class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none" />
+        </div>
+        <div class="mb-4">
+          <label class="block mb-2 font-semibold text-sm text-charcoal">Jenis Acara</label>
+          <input type="text" name="event_type" value={testimonial.event_type || ''} class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none" />
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="block mb-2 font-semibold text-sm text-charcoal">Isi Testimoni (ID) *</label>
+        <textarea name="content" rows="4" required class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none">{testimonial.content}</textarea>
+      </div>
+
+      <div class="mb-4">
+        <label class="block mb-2 font-semibold text-sm text-charcoal">Isi Testimoni (EN)</label>
+        <textarea name="content_en" rows="4" class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none">{testimonial.content_en || ''}</textarea>
+      </div>
+
+      <div class="mb-4">
+        <label class="block mb-2 font-semibold text-sm text-charcoal">Foto Pelanggan</label>
+        {testimonial.customer_image_url && (
+          <div class="mb-4">
+            <img src={testimonial.customer_image_url} alt="Current" class="w-[100px] rounded-full border border-sand shadow-sm" />
+          </div>
+        )}
+        <input type="file" name="image" accept="image/*" class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none bg-white" />
+        <small class="text-stone text-xs mt-1 block">Biarkan kosong jika tidak ingin mengubah gambar.</small>
+      </div>
+
+      <div class="flex gap-8 mb-6">
+        <label class="flex items-center gap-2 font-semibold text-sm text-charcoal cursor-pointer">
+          <input type="checkbox" name="is_active" checked={testimonial.is_active} class="w-4 h-4 text-emerald-dark accent-emerald-dark" />
+          Publish (Tampilkan)
+        </label>
+        <label class="flex items-center gap-2 font-semibold text-sm text-charcoal cursor-pointer">
+          <input type="checkbox" name="is_featured" checked={testimonial.is_featured} class="w-4 h-4 text-emerald-dark accent-emerald-dark" />
+          Featured (Tampil di Beranda)
+        </label>
+      </div>
+
+      <div class="mb-6 w-[200px]">
+        <label class="block mb-2 font-semibold text-sm text-charcoal">Urutan (Sort Order)</label>
+        <input type="number" name="sort_order" value={testimonial.sort_order} class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none" />
+      </div>
+
+      <div class="flex gap-4">
+        <button type="submit" class="bg-emerald-dark text-white border-none py-3 px-6 rounded-md font-bold cursor-pointer transition-colors hover:bg-emerald-light shadow-brand-sm">Update Testimoni</button>
+        <a href="/admin/testimonials" class="inline-block py-3 px-6 text-charcoal no-underline border border-sand rounded-md font-bold transition-colors hover:bg-ivory-warm">Batal</a>
+      </div>
+    </form>
+  </div>
+</AdminLayout>

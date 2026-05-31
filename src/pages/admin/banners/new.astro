@@ -1,0 +1,141 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+
+export const prerender = false;
+
+let error = '';
+const { supabase } = Astro.locals;
+
+if (Astro.request.method === 'POST') {
+  const formData = await Astro.request.formData();
+  
+  const title = formData.get('title') as string;
+  const title_en = formData.get('title_en') as string;
+  const subtitle = formData.get('subtitle') as string;
+  const subtitle_en = formData.get('subtitle_en') as string;
+  const cta_text = formData.get('cta_text') as string;
+  const cta_text_en = formData.get('cta_text_en') as string;
+  const cta_link = formData.get('cta_link') as string;
+  
+  const is_active = formData.get('is_active') === 'on';
+  const sort_order = parseInt(formData.get('sort_order') as string) || 0;
+  
+  const image = formData.get('image') as File;
+
+  if (!title) {
+    error = 'Judul wajib diisi.';
+  } else if (!image || image.size === 0) {
+    error = 'Gambar banner wajib diunggah.';
+  } else {
+    let image_url = '';
+    
+    // Upload image
+    const fileExt = image.name.split('.').pop();
+    const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+    const filePath = `${fileName}`;
+    
+    const { error: uploadError } = await supabase.storage
+      .from('banners')
+      .upload(filePath, image);
+      
+    if (uploadError) {
+      error = `Gagal upload gambar: ${uploadError.message}`;
+    } else {
+      const { data: publicUrlData } = supabase.storage.from('banners').getPublicUrl(filePath);
+      image_url = publicUrlData.publicUrl;
+      
+      const { error: insertError } = await supabase.from('banners').insert([{
+        title,
+        title_en,
+        subtitle,
+        subtitle_en,
+        image_url,
+        cta_text,
+        cta_text_en,
+        cta_link,
+        is_active,
+        sort_order
+      }]);
+
+      if (insertError) {
+        error = insertError.message;
+      } else {
+        return Astro.redirect('/admin/banners');
+      }
+    }
+  }
+}
+---
+
+<AdminLayout title="Tambah Banner">
+  <div class="max-w-[800px] bg-white p-6 rounded-lg border border-sand shadow-brand-sm">
+    <h2 class="mt-0 mb-6 text-emerald-dark font-display text-2xl">Banner Baru</h2>
+    
+    {error && (
+      <div class="bg-red-600 text-white p-3 rounded-md mb-4 text-sm">
+        {error}
+      </div>
+    )}
+
+    <form method="POST" enctype="multipart/form-data">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="mb-4">
+          <label class="block mb-2 font-semibold text-sm text-charcoal">Judul (ID) *</label>
+          <input type="text" name="title" required class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none" />
+        </div>
+        <div class="mb-4">
+          <label class="block mb-2 font-semibold text-sm text-charcoal">Judul (EN)</label>
+          <input type="text" name="title_en" class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="mb-4">
+          <label class="block mb-2 font-semibold text-sm text-charcoal">Subtitle (ID)</label>
+          <input type="text" name="subtitle" class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none" />
+        </div>
+        <div class="mb-4">
+          <label class="block mb-2 font-semibold text-sm text-charcoal">Subtitle (EN)</label>
+          <input type="text" name="subtitle_en" class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="mb-4">
+          <label class="block mb-2 font-semibold text-sm text-charcoal">Teks Tombol CTA (ID)</label>
+          <input type="text" name="cta_text" placeholder="Pesan Sekarang" class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none" />
+        </div>
+        <div class="mb-4">
+          <label class="block mb-2 font-semibold text-sm text-charcoal">Teks Tombol CTA (EN)</label>
+          <input type="text" name="cta_text_en" placeholder="Order Now" class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none" />
+        </div>
+        <div class="mb-4">
+          <label class="block mb-2 font-semibold text-sm text-charcoal">Link CTA</label>
+          <input type="text" name="cta_link" placeholder="/menu" class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none" />
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="block mb-2 font-semibold text-sm text-charcoal">Gambar Banner *</label>
+        <input type="file" name="image" accept="image/*" required class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none bg-white" />
+      </div>
+
+      <div class="mb-6">
+        <label class="flex items-center gap-2 font-semibold text-sm text-charcoal cursor-pointer">
+          <input type="checkbox" name="is_active" checked class="w-4 h-4 text-emerald-dark accent-emerald-dark" />
+          Aktif (Tampilkan di beranda)
+        </label>
+      </div>
+
+      <div class="mb-6 w-[200px]">
+        <label class="block mb-2 font-semibold text-sm text-charcoal">Urutan (Sort Order)</label>
+        <input type="number" name="sort_order" value="0" class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none" />
+      </div>
+
+      <div class="flex gap-4">
+        <button type="submit" class="bg-emerald-dark text-white border-none py-3 px-6 rounded-md font-bold cursor-pointer transition-colors hover:bg-emerald-light shadow-brand-sm">Simpan Banner</button>
+        <a href="/admin/banners" class="inline-block py-3 px-6 text-charcoal no-underline border border-sand rounded-md font-bold transition-colors hover:bg-ivory-warm">Batal</a>
+      </div>
+    </form>
+  </div>
+</AdminLayout>

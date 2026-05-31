@@ -22,24 +22,24 @@ const t = useTranslations(locale);
     <div class="container container--narrow">
       <SectionHeading 
         eyebrow={t('about.eyebrow')}
-        title="Cerita Kami"
-        subtitle="Mengenal lebih dekat Sari Susanti, dari resep keluarga hingga melayani momen terbaik Anda."
+        title={t('about_story.title')}
+        subtitle={t('about_story.subtitle')}
       />
 
       <div class="story-content reveal">
-        <img src="/placeholder.jpg" alt="Sari Susanti Family" class="story-hero-img" />
+        <img src="/sari-family.png" alt="Sari Susanti Family" class="story-hero-img" />
         
         <div class="story-text">
-          <p class="dropcap">B</p>
-          <p>erawal pada tahun 2010, Ibu Teti Susanti mulai membagikan kecintaannya pada masakan rumahan kepada tetangga dan kerabat terdekat di Tasikmalaya. Resep-resep warisan keluarga yang diolah dengan bahan-bahan segar pilihan terbukti selalu dirindukan oleh siapa saja yang mencicipinya.</p>
+          <p class="dropcap">{t('about_story.dropcap')}</p>
+          <p>{t('about_story.p1')}</p>
           
-          <p>Seiring berjalannya waktu, permintaan semakin banyak, dari pesanan arisan hingga pernikahan. Lahirlah <strong>Sari Susanti Catering & Bakery</strong>, sebuah usaha keluarga yang tumbuh berkembang tanpa pernah meninggalkan akar aslinya: kehangatan dan ketulusan dalam setiap masakan, layaknya hidangan dari dapur seorang ibu.</p>
+          <p set:html={t('about_story.p2')} />
 
           <blockquote class="story-quote">
-            "Kami percaya bahwa makanan bukan hanya soal rasa, tapi juga soal kenangan dan kebahagiaan yang dibagikan."
+            {t('about_story.quote')}
           </blockquote>
 
-          <p>Kini, Sari Susanti melayani berbagai kebutuhan acara, mulai dari nasi kotak, tumpeng tradisional, hingga aneka kue dan bakery premium. Kami terus berinovasi dalam penyajian dan layanan, sembari mempertahankan cita rasa autentik Nusantara yang menjadi identitas kami.</p>
+          <p>{t('about_story.p3')}</p>
         </div>
       </div>
     </div>

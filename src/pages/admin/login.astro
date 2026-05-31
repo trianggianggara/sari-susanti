@@ -1,0 +1,16 @@
+---
+import BaseHead from '../../components/common/BaseHead.astro';
+import LoginForm from '../../components/admin/LoginForm';
+
+export const prerender = false;
+---
+
+<!doctype html>
+<html lang="id">
+  <head>
+    <BaseHead locale="id" title="Admin Login - Sari Susanti" description="Admin Login" />
+  </head>
+  <body class="bg-ivory-warm m-0 font-body flex items-center justify-center min-h-screen">
+    <LoginForm client:load />
+  </body>
+</html>

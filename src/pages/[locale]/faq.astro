@@ -5,6 +5,8 @@ import { useTranslations } from '../../i18n/utils';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import FaqSection from '../../components/home/FaqSection.astro';
 
+import { supabasePublic } from '../../lib/supabase';
+
 export function getStaticPaths() {
   return LOCALES.map((locale) => ({ params: { locale } }));
 }
@@ -12,13 +14,11 @@ export function getStaticPaths() {
 const { locale } = Astro.params as { locale: Locale };
 const t = useTranslations(locale);
 
-const mockFaqs = [
-  { question: 'Berapa minimal order untuk Nasi Kotak?', answer: 'Minimal pemesanan untuk Nasi Kotak adalah 20 porsi.' },
-  { question: 'Apakah melayani pengiriman ke luar kota?', answer: 'Saat ini kami hanya melayani pengiriman untuk wilayah Tasikmalaya dan sekitarnya. Untuk kota terdekat, silakan hubungi admin kami.' },
-  { question: 'Berapa hari sebelum acara saya harus memesan?', answer: 'Untuk hasil yang maksimal, kami sarankan untuk memesan minimal H-3 sebelum acara.' },
-  { question: 'Apakah bisa custom menu sesuai budget?', answer: 'Tentu bisa. Silakan konsultasikan kebutuhan dan budget Anda kepada tim kami via WhatsApp.' },
-  { question: 'Bagaimana sistem pembayarannya?', answer: 'Pembayaran dapat dilakukan melalui transfer bank. Kami mewajibkan DP (Down Payment) sebesar 50% pada saat pemesanan, dan pelunasan paling lambat H-1 sebelum pengiriman.' },
-] as any[];
+const { data: faqs } = await supabasePublic
+  .from('faqs')
+  .select('question, question_en, answer, answer_en')
+  .eq('is_active', true)
+  .order('sort_order', { ascending: true });
 ---
 
 <BaseLayout 
@@ -27,7 +27,7 @@ const mockFaqs = [
   description={t('meta.faq.desc')}
 >
   <div class="faq-page">
-    <FaqSection locale={locale} faqs={mockFaqs} />
+    <FaqSection locale={locale} faqs={faqs || []} />
   </div>
 </BaseLayout>
 

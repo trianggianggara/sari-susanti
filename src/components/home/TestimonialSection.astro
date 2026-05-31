@@ -32,7 +32,7 @@ const t = useTranslations(locale);
               </svg>
             ))}
           </div>
-          <p class="testimonial-card__content">{item.content}</p>
+          <p class="testimonial-card__content">{locale === 'en' ? (item.content_en || item.content) : item.content}</p>
           <div class="testimonial-card__author">
             <div class="testimonial-card__avatar">
               {item.customer_avatar_url ? (
@@ -45,7 +45,7 @@ const t = useTranslations(locale);
             </div>
             <div>
               <div class="testimonial-card__author-name">{item.customer_name}</div>
-              {item.customer_title && <div class="testimonial-card__author-title">{item.customer_title}</div>}
+              {item.customer_role && <div class="testimonial-card__author-title">{item.customer_role}</div>}
             </div>
           </div>
         </div>

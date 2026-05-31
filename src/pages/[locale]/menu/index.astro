@@ -1,11 +1,14 @@
 ---
-import { LOCALES } from '../../../i18n/utils';
-import type { Locale } from '../../../i18n/utils';
-import { useTranslations } from '../../../i18n/utils';
-import BaseLayout from '../../../layouts/BaseLayout.astro';
-import SectionHeading from '../../../components/common/SectionHeading.astro';
-import { formatPrice } from '../../../lib/format';
-import { buildWhatsAppUrl } from '../../../lib/whatsapp';
+import { LOCALES } from "../../../i18n/utils";
+import type { Locale } from "../../../i18n/utils";
+import { useTranslations } from "../../../i18n/utils";
+import type { LocalizedProduct, LocalizedCategory } from "../../../types/app";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import SectionHeading from "../../../components/common/SectionHeading.astro";
+import { formatPrice } from "../../../lib/format";
+import { buildWhatsAppUrl } from "../../../lib/whatsapp";
+
+import { supabasePublic } from "../../../lib/supabase";
 
 export function getStaticPaths() {
   return LOCALES.map((locale) => ({ params: { locale } }));
@@ -14,69 +17,122 @@ export function getStaticPaths() {
 const { locale } = Astro.params as { locale: Locale };
 const t = useTranslations(locale);
 
-// Mock Data
-const mockCategories = [
-  { slug: 'sari-savory', name: 'Sari Savory' },
-  { slug: 'sari-sweet', name: 'Sari Sweet & Bites' },
-  { slug: 'sari-tumpeng', name: 'Sari Tumpeng' },
-];
+const [{ data: categories }, { data: products }] = await Promise.all([
+  supabasePublic
+    .from("categories")
+    .select("id, slug, name, name_en")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true }),
+  supabasePublic
+    .from("products")
+    .select(
+      `
+      slug, name, name_en, short_description, short_description_en, price, image_url,
+      categories (
+        slug, name, name_en
+      )
+    `,
+    )
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true }),
+]) as any;
 
-const mockProducts = [
-  { slug: 'nasi-kotak-premium', category: 'sari-savory', name: 'Nasi Kotak Premium', short_description: 'Nasi putih, ayam bakar madu, sambal goreng kentang, telur balado, kerupuk, buah.', price: 35000 },
-  { slug: 'tumpeng-mini', category: 'sari-tumpeng', name: 'Tumpeng Mini', short_description: 'Nasi kuning, ayam goreng, perkedel, kering tempe, telur iris, sambal.', price: 40000 },
-  { slug: 'snack-box-manis', category: 'sari-sweet', name: 'Snack Box Manis', short_description: 'Pie buah, risoles mayo, bolu kukus, air mineral.', price: 15000 },
-  { slug: 'nasi-besek', category: 'sari-savory', name: 'Nasi Besek Tradisional', short_description: 'Nasi liwet, ayam goreng kampung, tahu tempe bacem, ikan asin, lalapan, sambal terasi.', price: 45000 },
-] as any[];
+const activeCategories = (categories as any as LocalizedCategory[]) || [];
+const activeProducts = (products as any as LocalizedProduct[]) || [];
 ---
 
-<BaseLayout 
-  locale={locale} 
-  title={t('meta.menu.title')} 
-  description={t('meta.menu.desc')}
+<BaseLayout
+  locale={locale}
+  title={t("meta.menu.title")}
+  description={t("meta.menu.desc")}
 >
   <div class="menu-page">
     <div class="container">
-      <SectionHeading 
-        eyebrow={t('menu.eyebrow')}
-        title={t('menu.title')}
-        subtitle={t('menu.subtitle')}
+      <SectionHeading
+        eyebrow={t("menu.eyebrow")}
+        title={t("menu.title")}
+        subtitle={t("menu.subtitle")}
       />
 
       <div class="category-tabs reveal">
-        <button class="category-tab is-active" data-category="all">{t('categories.all')}</button>
-        {mockCategories.map((cat) => (
-          <button class="category-tab" data-category={cat.slug}>{cat.name}</button>
-        ))}
+        <button class="category-tab is-active" data-category="all"
+          >{t("categories.all")}</button
+        >
+        {
+          activeCategories.map((cat) => (
+            <button class="category-tab" data-category={cat.slug}>
+              {locale === "en" ? cat.name_en || cat.name : cat.name}
+            </button>
+          ))
+        }
       </div>
 
       <div class="grid-3 product-grid">
-        {mockProducts.map((product, index) => (
-          <div class="product-card reveal" data-category={product.category}>
-            <a href={`/${locale}/menu/${product.slug}`} class="product-card__image">
-              <img src="/placeholder.jpg" alt={product.name} loading="lazy" />
-            </a>
-            <div class="product-card__body">
-              <span class="product-card__category">{mockCategories.find(c => c.slug === product.category)?.name}</span>
-              <h3 class="product-card__name">
-                <a href={`/${locale}/menu/${product.slug}`}>{product.name}</a>
-              </h3>
-              <p class="product-card__desc">{product.short_description}</p>
-              <div class="product-card__footer">
-                <div class="product-card__price">
-                  <span class="product-card__price-label">{t('menu.price_from')}</span>
-                  <span class="product-card__price-value">{formatPrice(product.price, locale)}</span>
+        {
+          activeProducts.map((product) => (
+            <div
+              class="product-card reveal"
+              data-category={product.categories?.slug}
+            >
+              <a
+                href={`/${locale}/menu/${product.slug}`}
+                class="product-card__image"
+              >
+                <img
+                  src={product.image_url || "/placeholder.jpg"}
+                  alt={
+                    locale === "en"
+                      ? product.name_en || product.name
+                      : product.name
+                  }
+                  loading="lazy"
+                />
+              </a>
+              <div class="product-card__body">
+                <span class="product-card__category">
+                  {locale === "en"
+                    ? product.categories?.name_en || product.categories?.name
+                    : product.categories?.name}
+                </span>
+                <h3 class="product-card__name">
+                  <a href={`/${locale}/menu/${product.slug}`}>
+                    {locale === "en"
+                      ? product.name_en || product.name
+                      : product.name}
+                  </a>
+                </h3>
+                <p class="product-card__desc">
+                  {locale === "en"
+                    ? product.short_description_en || product.short_description
+                    : product.short_description}
+                </p>
+                <div class="product-card__footer">
+                  <div class="product-card__price">
+                    <span class="product-card__price-label">
+                      {t("menu.price_from")}
+                    </span>
+                    <span class="product-card__price-value">
+                      {formatPrice(product.price, locale)}
+                    </span>
+                  </div>
+                  <a
+                    href={buildWhatsAppUrl(
+                      locale,
+                      locale === "en"
+                        ? product.name_en || product.name
+                        : product.name,
+                    )}
+                    class="btn btn-primary btn-sm"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {t("nav.order")}
+                  </a>
                 </div>
-                <a 
-                  href={buildWhatsAppUrl(locale, product.name)} 
-                  class="btn btn-primary btn-sm"
-                  target="_blank" rel="noopener noreferrer"
-                >
-                  {t('nav.order')}
-                </a>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        }
       </div>
     </div>
   </div>
@@ -92,28 +148,29 @@ const mockProducts = [
 </style>
 
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const tabs = document.querySelectorAll('.category-tab');
-    const products = document.querySelectorAll('.product-card');
+  document.addEventListener("DOMContentLoaded", () => {
+    const tabs = document.querySelectorAll(".category-tab");
+    const products = document.querySelectorAll(".product-card");
 
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
         // Update active tab
-        tabs.forEach(t => t.classList.remove('is-active'));
-        tab.classList.add('is-active');
+        tabs.forEach((t) => t.classList.remove("is-active"));
+        tab.classList.add("is-active");
 
         // Filter products
-        const category = tab.getAttribute('data-category');
-        products.forEach(product => {
-          const productCategory = product.getAttribute('data-category');
-          if (category === 'all' || category === productCategory) {
-            (product as HTMLElement).style.display = 'flex';
+        const category = tab.getAttribute("data-category");
+        products.forEach((product) => {
+          const productCategory = product.getAttribute("data-category");
+          if (category === "all" || category === productCategory) {
+            (product as HTMLElement).style.display = "flex";
             // Slight animation re-trigger
-            (product as HTMLElement).style.animation = 'none';
+            (product as HTMLElement).style.animation = "none";
             (product as HTMLElement).offsetHeight; /* trigger reflow */
-            (product as HTMLElement).style.animation = 'fadeUp 0.5s var(--ease-out) forwards';
+            (product as HTMLElement).style.animation =
+              "fadeUp 0.5s var(--ease-out) forwards";
           } else {
-            (product as HTMLElement).style.display = 'none';
+            (product as HTMLElement).style.display = "none";
           }
         });
       });

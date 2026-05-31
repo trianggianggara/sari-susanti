@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* ═══════════════════════════════════════════════════════════════
    SARI SUSANTI — GLOBAL CSS
    Design System: Luxury-Organic | Refined Elegance meets Natural Warmth
@@ -313,4 +317,183 @@ p {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-emerald);
+}
+
+/* ── Admin Dashboard Global UI ────────────────────────────────── */
+.admin-content table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-white);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  margin-top: var(--space-4);
+}
+
+.admin-content th, 
+.admin-content td {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  border-bottom: 1px solid var(--color-sand);
+}
+
+.admin-content th {
+  background: var(--color-emerald-dark);
+  color: var(--color-white);
+  font-weight: 500;
+  font-size: var(--text-sm);
+}
+
+.admin-content tr:hover {
+  background: var(--color-ivory-warm);
+}
+
+.admin-content a, 
+.admin-content button {
+  font-family: inherit;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+/* Base input styling for CRUD forms */
+.admin-content input:not([type="checkbox"]):not([type="radio"]),
+.admin-content textarea,
+.admin-content select {
+  width: 100%;
+  padding: var(--space-3);
+  border: 1px solid var(--color-stone-light);
+  border-radius: var(--radius-sm);
+  background: var(--color-white);
+  color: var(--color-charcoal);
+  transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.admin-content input:focus,
+.admin-content textarea:focus,
+.admin-content select:focus {
+  outline: none;
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 3px var(--color-gold-glass);
+}
+
+/* Form Buttons */
+.admin-content button[type="submit"],
+.admin-content .btn-primary {
+  background: var(--color-emerald-dark);
+  color: var(--color-white);
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+  border: none;
+  cursor: pointer;
+  display: inline-block;
+  text-align: center;
+}
+
+.admin-content button[type="submit"]:hover,
+.admin-content .btn-primary:hover {
+  background: var(--color-emerald-light);
+  box-shadow: var(--shadow-emerald);
+}
+
+.admin-content .btn-secondary {
+  background: var(--color-sand);
+  color: var(--color-charcoal);
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  display: inline-block;
+  text-align: center;
+}
+
+.admin-content .btn-secondary:hover {
+  background: var(--color-sand-light);
+}
+
+.admin-content .btn-danger {
+  background: none;
+  color: var(--color-error);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  display: inline-block;
+  text-align: center;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.admin-content .btn-danger:hover {
+  background: rgba(196, 69, 54, 0.1);
+}
+
+/* Base structural classes */
+.admin-card {
+  background: var(--color-white);
+  padding: var(--space-8);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-sand);
+  box-shadow: var(--shadow-sm);
+  max-width: 800px;
+}
+
+.admin-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-6);
+}
+
+.admin-page-title {
+  margin: 0;
+  font-family: var(--font-display);
+  color: var(--color-emerald-dark);
+  font-size: var(--text-2xl);
+}
+
+/* Badges */
+.badge-active {
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: #e6f4ea;
+  color: var(--color-success);
+  display: inline-block;
+}
+
+.badge-inactive {
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: #fce8e6;
+  color: var(--color-error);
+  display: inline-block;
+}
+
+/* Form layouts */
+.form-group {
+  margin-bottom: var(--space-4);
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--color-charcoal);
+}
+
+.form-actions {
+  display: flex;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+
+.error-message {
+  background: var(--color-error);
+  color: var(--color-white);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-4);
+  font-size: var(--text-sm);
 }

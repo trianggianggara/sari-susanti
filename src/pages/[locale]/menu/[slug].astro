@@ -2,20 +2,28 @@
 import { LOCALES } from '../../../i18n/utils';
 import type { Locale } from '../../../i18n/utils';
 import { useTranslations } from '../../../i18n/utils';
+import type { LocalizedProduct } from '../../../types/app';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import { formatPrice } from '../../../lib/format';
 import { buildWhatsAppUrl } from '../../../lib/whatsapp';
 
-export function getStaticPaths() {
-  const mockProducts = [
-    { slug: 'nasi-kotak-premium', category: 'sari-savory', name: 'Nasi Kotak Premium', short_description: 'Nasi putih, ayam bakar madu, sambal goreng kentang, telur balado, kerupuk, buah.', description: 'Nasi Kotak Premium dari Sari Susanti menyajikan hidangan lengkap yang cocok untuk berbagai acara. Dikemas secara higienis dan rapi, setiap kotaknya berisi lauk pauk berkualitas yang dimasak dengan rempah pilihan.', price: 35000 },
-    { slug: 'tumpeng-mini', category: 'sari-tumpeng', name: 'Tumpeng Mini', short_description: 'Nasi kuning, ayam goreng, perkedel, kering tempe, telur iris, sambal.', description: 'Tumpeng Mini sangat pas untuk syukuran kecil, ulang tahun, atau sekadar dinikmati bersama keluarga. Dibuat dengan resep asli nasi kuning Nusantara yang gurih dan wangi.', price: 40000 },
-    { slug: 'snack-box-manis', category: 'sari-sweet', name: 'Snack Box Manis', short_description: 'Pie buah, risoles mayo, bolu kukus, air mineral.', description: 'Pilihan tepat untuk coffee break atau camilan acara Anda. Terdiri dari perpaduan kue manis dan gurih yang dibuat fresh setiap harinya.', price: 15000 },
-    { slug: 'nasi-besek', category: 'sari-savory', name: 'Nasi Besek Tradisional', short_description: 'Nasi liwet, ayam goreng kampung, tahu tempe bacem, ikan asin, lalapan, sambal terasi.', description: 'Membawa nostalgia rasa pedesaan, Nasi Besek disajikan dalam kemasan anyaman bambu tradisional yang ramah lingkungan. Dilengkapi dengan lauk pauk klasik yang membangkitkan selera makan.', price: 45000 },
-  ];
+import { supabasePublic } from '../../../lib/supabase';
+
+export async function getStaticPaths() {
+  const { data: products } = await supabasePublic
+    .from('products')
+    .select(`
+      slug, name, name_en, short_description, short_description_en, description, description_en, price, image_url,
+      categories (
+        slug, name, name_en
+      )
+    `)
+    .eq('is_active', true);
+
+  const activeProducts = (products as any as LocalizedProduct[]) || [];
 
   return LOCALES.flatMap((locale) => 
-    mockProducts.map(product => ({
+    activeProducts.map((product: LocalizedProduct) => ({
       params: { locale, slug: product.slug },
       props: { product }
     }))
@@ -29,8 +37,8 @@ const t = useTranslations(locale);
 
 <BaseLayout 
   locale={locale}
-  title={`${product.name} | ${t('meta.menu.title')}`}
-  description={product.short_description}
+  title={`${locale === 'en' ? (product.name_en || product.name) : product.name} | ${t('meta.menu.title')}`}
+  description={(locale === 'en' ? (product.short_description_en || product.short_description) : product.short_description) || undefined}
 >
   <div class="product-detail-page">
     <div class="container">
@@ -44,13 +52,13 @@ const t = useTranslations(locale);
 
       <div class="detail-grid">
         <div class="detail-image reveal-scale">
-          <img src="/placeholder.jpg" alt={product.name} />
+          <img src={product.image_url || "/placeholder.jpg"} alt={locale === 'en' ? (product.name_en || product.name) : product.name} />
         </div>
         
         <div class="detail-content reveal-right">
           <div class="detail-header">
-            <span class="detail-category">Sari Savory</span>
-            <h1 class="detail-title">{product.name}</h1>
+            <span class="detail-category">{locale === 'en' ? (product.categories?.name_en || product.categories?.name) : product.categories?.name}</span>
+            <h1 class="detail-title">{locale === 'en' ? (product.name_en || product.name) : product.name}</h1>
           </div>
 
           <div class="detail-price-box">
@@ -59,12 +67,12 @@ const t = useTranslations(locale);
           </div>
 
           <div class="detail-desc">
-            <p>{product.description}</p>
+            <p>{locale === 'en' ? (product.description_en || product.description) : product.description}</p>
           </div>
 
           <div class="detail-actions">
             <a 
-              href={buildWhatsAppUrl(locale, product.name)} 
+              href={buildWhatsAppUrl(locale, locale === 'en' ? (product.name_en || product.name) : product.name)} 
               class="btn btn-whatsapp btn-lg w-full"
               target="_blank" rel="noopener noreferrer"
             >

@@ -8,6 +8,7 @@ import AboutPreview from '../../components/home/AboutPreview.astro';
 import TestimonialSection from '../../components/home/TestimonialSection.astro';
 import FaqSection from '../../components/home/FaqSection.astro';
 import CtaSection from '../../components/home/CtaSection.astro';
+import { supabasePublic } from '../../lib/supabase';
 
 // We need to define getStaticPaths for dynamic routing
 export function getStaticPaths() {
@@ -16,31 +17,33 @@ export function getStaticPaths() {
 
 const { locale } = Astro.params as { locale: Locale };
 
-// Mock data (since we haven't connected Supabase fetch yet)
-const mockProducts = [
-  { slug: 'nasi-kotak-premium', name: 'Nasi Kotak Premium', short_description: 'Nasi putih, ayam bakar madu, sambal goreng kentang, telur balado, kerupuk, buah.', price: 35000, image_url: '', is_featured: true },
-  { slug: 'tumpeng-mini', name: 'Tumpeng Mini', short_description: 'Nasi kuning, ayam goreng, perkedel, kering tempe, telur iris, sambal.', price: 40000, image_url: '', is_featured: true },
-  { slug: 'snack-box-manis', name: 'Snack Box Manis', short_description: 'Pie buah, risoles mayo, bolu kukus, air mineral.', price: 15000, image_url: '', is_featured: true },
-] as any[];
+// Fetch data from Supabase for SSG build
+const [
+  { data: products },
+  { data: testimonials },
+  { data: faqs }
+] = await Promise.all([
+  supabasePublic.from('products')
+    .select('slug, name, name_en, short_description, short_description_en, price, image_url, is_featured')
+    .eq('is_active', true)
+    .eq('is_featured', true),
+  supabasePublic.from('testimonials')
+    .select('customer_name, customer_role, customer_avatar_url, content, content_en, rating')
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true }),
+  supabasePublic.from('faqs')
+    .select('question, question_en, answer, answer_en')
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true })
+]);
 
-const mockTestimonials = [
-  { customer_name: 'Budi Santoso', rating: 5, content: 'Pesan untuk acara kantor, makanannya enak semua dan tepat waktu pengirimannya. Rekomendasi banget!' },
-  { customer_name: 'Siti Aminah', rating: 5, content: 'Tumpengnya cantik dan rasanya gurih pas. Keluarga pada suka semua. Terima kasih Sari Susanti!' },
-  { customer_name: 'Rina Marlina', rating: 4, content: 'Snack box nya bervariasi, kuenya lembut dan fresh.' },
-] as any[];
-
-const mockFaqs = [
-  { question: 'Berapa minimal order untuk Nasi Kotak?', answer: 'Minimal pemesanan untuk Nasi Kotak adalah 20 porsi.' },
-  { question: 'Apakah melayani pengiriman ke luar kota?', answer: 'Saat ini kami hanya melayani pengiriman untuk wilayah Tasikmalaya dan sekitarnya.' },
-  { question: 'Berapa hari sebelum acara saya harus memesan?', answer: 'Untuk hasil yang maksimal, kami sarankan untuk memesan minimal H-3 sebelum acara.' },
-] as any[];
 ---
 
 <BaseLayout locale={locale}>
   <HeroBanner locale={locale} />
-  <FeaturedMenu locale={locale} products={mockProducts} />
+  <FeaturedMenu locale={locale} products={products || []} />
   <AboutPreview locale={locale} />
-  <TestimonialSection locale={locale} testimonials={mockTestimonials} />
-  <FaqSection locale={locale} faqs={mockFaqs} />
+  <TestimonialSection locale={locale} testimonials={testimonials || []} />
+  <FaqSection locale={locale} faqs={faqs || []} />
   <CtaSection locale={locale} />
 </BaseLayout>

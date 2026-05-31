@@ -25,13 +25,13 @@ const t = useTranslations(locale);
       {faqs.map((faq, index) => (
         <div class="faq-item">
           <button class="faq-trigger" aria-expanded="false" aria-controls={`faq-content-${index}`}>
-            <span class="faq-question">{faq.question}</span>
+            <span class="faq-question">{locale === 'en' ? (faq.question_en || faq.question) : faq.question}</span>
             <span class="faq-icon">+</span>
           </button>
           <div class="faq-content" id={`faq-content-${index}`}>
             <div class="faq-answer-wrapper">
               <div class="faq-answer">
-                {faq.answer}
+                {locale === 'en' ? (faq.answer_en || faq.answer) : faq.answer}
               </div>
             </div>
           </div>

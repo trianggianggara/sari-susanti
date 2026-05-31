@@ -1,0 +1,98 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+
+export const prerender = false;
+
+const { id } = Astro.params;
+const { supabase } = Astro.locals;
+
+let error = '';
+
+// Fetch existing data
+const { data: category, error: fetchError } = await supabase
+  .from('categories')
+  .select('*')
+  .eq('id', id)
+  .single();
+
+if (fetchError || !category) {
+  return Astro.redirect('/admin/categories');
+}
+
+if (Astro.request.method === 'POST') {
+  const formData = await Astro.request.formData();
+  const name = formData.get('name') as string;
+  const name_en = formData.get('name_en') as string;
+  const slug = formData.get('slug') as string;
+  const is_active = formData.get('is_active') === 'on';
+  const sort_order = parseInt(formData.get('sort_order') as string) || 0;
+
+  if (!name || !slug) {
+    error = 'Nama dan Slug wajib diisi.';
+  } else {
+    const { error: updateError } = await supabase
+      .from('categories')
+      .update({
+        name,
+        name_en,
+        slug,
+        is_active,
+        sort_order,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id);
+
+    if (updateError) {
+      error = updateError.message;
+    } else {
+      return Astro.redirect('/admin/categories');
+    }
+  }
+}
+---
+
+<AdminLayout title="Edit Kategori">
+  <div class="max-w-[600px] bg-white p-6 rounded-lg border border-sand shadow-brand-sm">
+    <h2 class="mt-0 mb-6 text-emerald-dark font-display text-2xl">Edit Kategori</h2>
+    
+    {error && (
+      <div class="bg-red-600 text-white p-3 rounded-md mb-4 text-sm">
+        {error}
+      </div>
+    )}
+
+    <form method="POST">
+      <div class="mb-4">
+        <label class="block mb-2 font-semibold text-sm text-charcoal">Nama (ID) *</label>
+        <input type="text" name="name" value={category.name} required class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none" />
+      </div>
+
+      <div class="mb-4">
+        <label class="block mb-2 font-semibold text-sm text-charcoal">Nama (EN)</label>
+        <input type="text" name="name_en" value={category.name_en || ''} class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none" />
+      </div>
+
+      <div class="mb-4">
+        <label class="block mb-2 font-semibold text-sm text-charcoal">Slug (URL) *</label>
+        <input type="text" name="slug" value={category.slug} required class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none" />
+      </div>
+
+      <div class="mb-4">
+        <label class="block mb-2 font-semibold text-sm text-charcoal">Urutan (Sort Order)</label>
+        <input type="number" name="sort_order" value={category.sort_order} class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none" />
+      </div>
+
+      <div class="mb-6">
+        <label class="flex items-center gap-2 font-semibold text-sm text-charcoal cursor-pointer">
+          <input type="checkbox" name="is_active" checked={category.is_active} class="w-4 h-4 text-emerald-dark accent-emerald-dark" />
+          Aktif (Tampilkan di website)
+        </label>
+      </div>
+
+      <div class="flex gap-4">
+        <button type="submit" class="bg-emerald-dark text-white border-none py-3 px-6 rounded-md font-bold cursor-pointer transition-colors hover:bg-emerald-light shadow-brand-sm">Update</button>
+        <a href="/admin/categories" class="inline-block py-3 px-6 text-charcoal no-underline border border-sand rounded-md font-bold transition-colors hover:bg-ivory-warm">Batal</a>
+      </div>
+    </form>
+  </div>
+</AdminLayout>

@@ -60,7 +60,7 @@ export interface Database {
           description_en: string | null
           price: number
           image_url: string | null
-          is_available: boolean
+          is_active: boolean
           is_featured: boolean
           sort_order: number
           created_at: string
@@ -78,7 +78,7 @@ export interface Database {
           description_en?: string | null
           price: number
           image_url?: string | null
-          is_available?: boolean
+          is_active?: boolean
           is_featured?: boolean
           sort_order?: number
           created_at?: string
@@ -96,12 +96,21 @@ export interface Database {
           description_en?: string | null
           price?: number
           image_url?: string | null
-          is_available?: boolean
+          is_active?: boolean
           is_featured?: boolean
           sort_order?: number
           created_at?: string
           updated_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       banners: {
         Row: {
@@ -124,12 +133,12 @@ export interface Database {
         Row: {
           id: string
           customer_name: string
-          customer_title: string | null
+          customer_role: string | null
           customer_avatar_url: string | null
           content: string
           content_en: string | null
           rating: number
-          is_published: boolean
+          is_active: boolean
           sort_order: number
           created_at: string
           updated_at: string
@@ -144,7 +153,7 @@ export interface Database {
           answer_en: string | null
           category: string | null
           sort_order: number
-          is_published: boolean
+          is_active: boolean
           created_at: string
           updated_at: string
         }

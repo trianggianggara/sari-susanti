@@ -1,0 +1,80 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+
+export const prerender = false;
+
+const { supabase } = Astro.locals;
+const { data: banners, error } = await supabase
+  .from('banners')
+  .select('*')
+  .order('sort_order', { ascending: true });
+
+if (error) {
+  console.error(error);
+}
+
+// Handle Delete
+if (Astro.request.method === 'POST') {
+  const formData = await Astro.request.formData();
+  const id = formData.get('id');
+  if (id) {
+    await supabase.from('banners').delete().eq('id', id);
+    return Astro.redirect('/admin/banners');
+  }
+}
+---
+
+<AdminLayout title="Kelola Banner">
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="m-0 font-display text-emerald-dark text-2xl">Daftar Banner</h2>
+    <a href="/admin/banners/new" class="bg-emerald-dark text-white px-4 py-2 no-underline rounded-md font-bold transition-colors duration-150 ease-out hover:bg-emerald-light shadow-brand-sm hover:shadow-brand-md">+ Tambah Banner</a>
+  </div>
+
+  <div class="bg-white rounded-lg border border-sand overflow-hidden shadow-brand-sm">
+    <table class="w-full border-collapse text-left">
+      <thead class="bg-ivory-warm border-b border-sand">
+        <tr>
+          <th class="p-4 text-charcoal-light font-semibold text-sm">Gambar</th>
+          <th class="p-4 text-charcoal-light font-semibold text-sm">Judul</th>
+          <th class="p-4 text-charcoal-light font-semibold text-sm">Status</th>
+          <th class="p-4 text-charcoal-light font-semibold text-sm text-right">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        {banners?.map((banner) => (
+          <tr class="border-b border-sand transition-colors hover:bg-ivory">
+            <td class="p-4">
+              {banner.image_url ? (
+                <img src={banner.image_url} alt={banner.title} class="w-[100px] h-[50px] object-cover rounded-md shadow-sm" />
+              ) : (
+                <div class="w-[100px] h-[50px] bg-gray-100 rounded-md"></div>
+              )}
+            </td>
+            <td class="p-4 font-bold text-charcoal">
+              {banner.title}
+            </td>
+            <td class="p-4">
+              <span class={`px-3 py-1 rounded-full text-xs font-bold ${banner.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                {banner.is_active ? 'Aktif' : 'Nonaktif'}
+              </span>
+            </td>
+            <td class="p-4 text-right">
+              <div class="flex justify-end gap-3 items-center h-[50px]">
+                <a href={`/admin/banners/${banner.id}`} class="text-blue-600 font-bold no-underline transition-opacity hover:opacity-70">Edit</a>
+                <form method="POST" onsubmit="return confirm('Yakin ingin menghapus banner ini?');" class="m-0">
+                  <input type="hidden" name="id" value={banner.id} />
+                  <button type="submit" class="bg-transparent border-none text-red-600 cursor-pointer font-bold p-0 transition-opacity hover:opacity-70">Hapus</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        ))}
+        {banners?.length === 0 && (
+          <tr>
+            <td colspan="4" class="p-6 text-center text-charcoal-light">Belum ada banner.</td>
+          </tr>
+        )}
+      </tbody>
+    </table>
+  </div>
+</AdminLayout>
