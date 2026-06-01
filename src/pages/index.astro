@@ -1,6 +1,6 @@
 ---
 import { DEFAULT_LOCALE } from '../i18n/utils';
 
-// Redirect root to default locale
-return Astro.redirect(`/${DEFAULT_LOCALE}`);
+// Rewrite root to default locale without changing the URL
+return Astro.rewrite(`/${DEFAULT_LOCALE}`);
 ---
