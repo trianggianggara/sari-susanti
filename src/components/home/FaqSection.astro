@@ -21,9 +21,9 @@ const t = useTranslations(locale);
       subtitle={t('faq.subtitle')}
     />
 
-    <div class="faq-list reveal">
+    <div class="faq-list">
       {faqs.map((faq, index) => (
-        <div class="faq-item">
+        <div class={`faq-item reveal stagger-${Math.min((index % 6) + 1, 6)}`}>
           <button class="faq-trigger" aria-expanded="false" aria-controls={`faq-content-${index}`}>
             <span class="faq-question">{locale === 'en' ? (faq.question_en || faq.question) : faq.question}</span>
             <span class="faq-icon">+</span>

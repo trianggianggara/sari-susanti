@@ -145,12 +145,52 @@
 }
 
 /* Stagger delays for grouped items */
-.stagger-1 { transition-delay: 0ms; }
-.stagger-2 { transition-delay: 80ms; }
-.stagger-3 { transition-delay: 160ms; }
-.stagger-4 { transition-delay: 240ms; }
-.stagger-5 { transition-delay: 320ms; }
-.stagger-6 { transition-delay: 400ms; }
+.stagger-1  { transition-delay:   0ms; }
+.stagger-2  { transition-delay:  80ms; }
+.stagger-3  { transition-delay: 160ms; }
+.stagger-4  { transition-delay: 240ms; }
+.stagger-5  { transition-delay: 320ms; }
+.stagger-6  { transition-delay: 400ms; }
+.stagger-7  { transition-delay: 480ms; }
+.stagger-8  { transition-delay: 560ms; }
+.stagger-9  { transition-delay: 640ms; }
+.stagger-10 { transition-delay: 720ms; }
+.stagger-11 { transition-delay: 800ms; }
+.stagger-12 { transition-delay: 880ms; }
+
+/* Subtle upward reveal (smaller distance for already-visible areas) */
+.reveal-sm {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 0.5s var(--ease-smooth),
+    transform 0.5s var(--ease-smooth);
+}
+.reveal-sm.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Accessibility: respect reduced motion preference ─────── */
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal-left,
+  .reveal-right,
+  .reveal-scale,
+  .reveal-sm {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .hero-heading, .hero-subheading, .hero-cta, .hero-badge, .hero-animate {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .marquee-content { animation: none !important; }
+  .float, .pulse-gold, .gradient-text { animation: none !important; }
+}
+
 
 /* ── Skeleton Shimmer ───────────────────────────────────────── */
 .skeleton {

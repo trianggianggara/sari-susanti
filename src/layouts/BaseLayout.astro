@@ -56,7 +56,7 @@ const { locale, title, description, image } = Astro.props;
           });
         }, observerOptions);
 
-        document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale, .ornament-line')
+        document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale, .reveal-sm, .ornament-line')
           .forEach((el) => revealObserver.observe(el));
       });
     </script>
