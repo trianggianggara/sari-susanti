@@ -54,7 +54,7 @@ export function getLocalePath(pathname: string, targetLocale: Locale): string {
     }
   }
 
-  return '/' + segments.join('/');
+  return '/' + segments.join('/') + (segments.length === 1 ? '/' : '');
 }
 
 /**

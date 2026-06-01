@@ -551,37 +551,88 @@
     background var(--duration-normal) var(--ease-out),
     box-shadow var(--duration-normal) var(--ease-out),
     border-color var(--duration-normal) var(--ease-out);
-  
-  /* Fully Transparent */
+  /* Transparent by default */
   background: transparent;
   border-bottom: 1px solid transparent;
 }
 
-.nav.is-scrolled,
-.nav.is-menu-open,
-.nav.nav--solid {
-  background: rgba(253, 251, 247, 0.95);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+/* White background on scroll */
+.nav.is-scrolled {
+  background: var(--color-white);
   border-bottom: 1px solid var(--color-sand);
+  box-shadow: 0 2px 20px rgba(44, 44, 44, 0.08);
 }
 
-.nav.is-scrolled .nav__link,
-.nav.is-menu-open .nav__link,
+/* Nav links switch to dark on scroll */
+.nav.is-scrolled .nav__link {
+  color: var(--color-charcoal);
+  text-shadow: none;
+}
+
+.nav.is-scrolled .nav__link:hover {
+  color: var(--color-emerald);
+  font-style: italic;
+}
+
+.nav.is-scrolled .nav__link::after {
+  background: var(--color-emerald);
+}
+
+/* Active on scrolled: emerald italic + underline */
+.nav.is-scrolled .nav__link.is-active {
+  color: var(--color-emerald);
+  font-style: italic;
+  font-weight: 600;
+  text-shadow: none;
+  background: transparent;
+}
+
+.nav.is-scrolled .nav__link.is-active::after {
+  transform: scaleX(1);
+  background: var(--color-emerald);
+}
+
+.nav.is-scrolled .nav__hamburger span {
+  background: var(--color-charcoal);
+}
+
+/* ── Inner pages (nav--solid): dark text over light background ── */
 .nav.nav--solid .nav__link {
   color: var(--color-charcoal);
+  text-shadow: none;
 }
 
-.nav.is-scrolled .nav__brand-text,
-.nav.is-menu-open .nav__brand-text,
-.nav.nav--solid .nav__brand-text {
+.nav.nav--solid .nav__link:hover {
+  color: var(--color-emerald);
+  font-style: italic;
+}
+
+.nav.nav--solid .nav__link::after {
+  background: var(--color-emerald);
+}
+
+/* Active on inner pages: emerald italic + underline */
+.nav.nav--solid .nav__link.is-active {
+  color: var(--color-emerald);
+  font-style: italic;
+  font-weight: 600;
+  text-shadow: none;
+  background: transparent;
+}
+
+.nav.nav--solid .nav__link.is-active::after {
+  transform: scaleX(1);
+  background: var(--color-emerald);
+}
+
+.nav.nav--solid .nav__hamburger span {
+  background: var(--color-charcoal);
+}
+
+.nav.nav--solid .lang-switcher {
   color: var(--color-charcoal);
-}
-
-.nav.is-scrolled .nav__logo img,
-.nav.is-menu-open .nav__logo img,
-.nav.nav--solid .nav__logo img {
-  filter: none;
+  border-color: rgba(0, 0, 0, 0.2);
+  background: transparent;
 }
 
 .nav__inner {
@@ -620,37 +671,63 @@
 }
 
 .nav__link {
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--color-white); /* White text initially */
+  font-family: var(--font-accent);
+  font-size: clamp(0.95rem, 0.88rem + 0.3vw, 1.05rem);
+  font-weight: 500;
+  font-style: normal;
+  color: var(--color-white);
   text-decoration: none;
-  letter-spacing: var(--tracking-wide);
-  transition: color var(--duration-fast) var(--ease-out);
+  letter-spacing: 0.08em;
+  transition:
+    color var(--duration-normal) var(--ease-out),
+    letter-spacing var(--duration-normal) var(--ease-out),
+    font-style var(--duration-normal) var(--ease-out);
   position: relative;
+  padding: 4px 0 6px;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.4);
 }
 
+/* Animated underline — slides from left on hover */
 .nav__link::after {
   content: '';
   position: absolute;
-  bottom: -4px;
+  bottom: 0;
   left: 0;
-  right: 0;
-  height: 2px;
+  width: 100%;
+  height: 1.5px;
   background: var(--color-gold);
   border-radius: var(--radius-full);
   transform: scaleX(0);
-  transform-origin: center;
+  transform-origin: left;
   transition: transform var(--duration-normal) var(--ease-out);
 }
 
-.nav__link:hover,
-.nav__link.is-active {
-  color: var(--color-emerald);
+/* Hover: italic + tighter tracking + underline slides in */
+.nav__link:hover {
+  color: var(--color-gold-light);
+  letter-spacing: 0.12em;
+  font-style: italic;
+  text-shadow: none;
 }
 
-.nav__link:hover::after,
+.nav__link:hover::after {
+  transform: scaleX(1);
+}
+
+/* Active: italic + gold color + full underline (on transparent/home nav) */
+.nav__link.is-active {
+  color: var(--color-gold);
+  font-style: italic;
+  font-weight: 600;
+  letter-spacing: 0.10em;
+  text-shadow: none;
+  background: transparent;
+  padding: 4px 0 6px;
+}
+
 .nav__link.is-active::after {
   transform: scaleX(1);
+  background: var(--color-gold);
 }
 
 .nav__actions {
@@ -685,12 +762,9 @@
     background var(--duration-normal);
 }
 
-.nav.is-scrolled .nav__hamburger span,
-.nav.is-menu-open .nav__hamburger span,
-.nav.nav--solid .nav__hamburger span {
-  background: var(--color-charcoal);
-}
+/* Hamburger always white since nav is fully transparent */
 
+/* Mobile menu panel: solid for readability */
 .nav__mobile {
   position: fixed;
   top: var(--nav-height);
@@ -712,9 +786,38 @@
 }
 
 .nav__mobile .nav__link {
-  color: var(--color-charcoal); /* Ensure text is visible on ivory background */
-  padding: var(--space-2) 0;
-  font-size: var(--text-lg);
+  font-family: var(--font-accent);
+  font-size: var(--text-xl);
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: var(--color-charcoal);
+  text-shadow: none;
+  padding: var(--space-2) var(--space-4);
+  border-left: 3px solid transparent;
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    font-style var(--duration-fast) var(--ease-out);
+}
+
+.nav__mobile .nav__link:hover {
+  color: var(--color-emerald);
+  font-style: italic;
+  border-left-color: var(--color-gold);
+}
+
+/* Mobile active: emerald left bar + emerald text */
+.nav__mobile .nav__link.is-active {
+  color: var(--color-emerald);
+  font-weight: 700;
+  border-left-color: var(--color-emerald);
+  background: var(--color-emerald-glass);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+.nav__mobile .nav__link::before,
+.nav__mobile .nav__link::after {
+  display: none;
 }
 
 .nav__mobile.is-open {
@@ -723,9 +826,39 @@
   pointer-events: all;
 }
 
+/* Mobile panel header: logo + lang switcher */
+.nav__mobile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+
+.nav__mobile-logo img {
+  height: 48px;
+  width: auto;
+}
+
+.nav__mobile-divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--color-sand), transparent);
+  margin-bottom: var(--space-2);
+}
+
+/* Mobile: lang switcher inside panel uses charcoal */
+.nav__mobile .lang-switcher {
+  color: var(--color-charcoal);
+  border-color: rgba(0, 0, 0, 0.15);
+  background: transparent;
+}
+
 @media (max-width: 768px) {
   .nav__links { display: none; }
   .nav__hamburger { display: flex; }
+  .nav__lang-desktop { display: none; }
+  /* Hide main navbar logo on mobile — it lives inside the mobile panel */
+  .nav__inner .nav__logo { display: none; }
 }
 
 /* ── Language Switcher ──────────────────────────────────────── */
@@ -734,13 +867,14 @@
   align-items: center;
   gap: var(--space-1);
   padding: var(--space-1) var(--space-3);
-  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
   border-radius: var(--radius-full);
   font-size: var(--text-xs);
   font-weight: 600;
   letter-spacing: var(--tracking-wide);
   color: var(--color-white);
   text-decoration: none;
+  background: rgba(255, 255, 255, 0.08);
   transition:
     border-color var(--duration-fast) var(--ease-out),
     color var(--duration-fast) var(--ease-out),
@@ -751,7 +885,8 @@
 .nav.is-menu-open .lang-switcher,
 .nav.nav--solid .lang-switcher {
   color: var(--color-charcoal);
-  border-color: var(--color-emerald-glass);
+  border-color: rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .lang-switcher:hover {

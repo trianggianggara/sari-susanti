@@ -21,7 +21,18 @@ const navItems = [
 ];
 
 const currentPath = Astro.url.pathname;
-const isHome = currentPath === `${prefix}/` || currentPath === prefix || (prefix === '' && currentPath === '/');
+
+// The middleware rewrites e.g. /about-us → /id/about-us internally.
+// Astro.url.pathname returns the REWRITTEN path, so strip the /id prefix
+// for ID locale to compare against item hrefs correctly.
+const normalizedPath = (prefix === '' && currentPath.startsWith('/id'))
+  ? currentPath.slice(3) || '/'   // strip "/id" → "/about-us"
+  : currentPath;
+
+const isHome = 
+  normalizedPath === '/' || 
+  normalizedPath === `${prefix}/` || 
+  normalizedPath === prefix;
 ---
 
 <header class:list={['nav', { 'nav--solid': !isHome }]} id="main-nav">
@@ -34,7 +45,7 @@ const isHome = currentPath === `${prefix}/` || currentPath === prefix || (prefix
       {navItems.map((item) => (
         <a 
           href={item.href} 
-          class:list={['nav__link', { 'is-active': currentPath === item.href || (item.href !== `${prefix}/` && currentPath.startsWith(item.href)) }]}
+          class:list={['nav__link', { 'is-active': normalizedPath === item.href || (item.href !== `${prefix}/` && normalizedPath.startsWith(item.href)) }]}
         >
           {item.label}
         </a>
@@ -42,7 +53,9 @@ const isHome = currentPath === `${prefix}/` || currentPath === prefix || (prefix
     </nav>
 
     <div class="nav__actions">
-      <LanguageSwitcher locale={locale} />
+      <span class="nav__lang-desktop">
+        <LanguageSwitcher locale={locale} />
+      </span>
       <button class="nav__hamburger" id="nav-toggle" aria-label="Menu">
         <span></span>
         <span></span>
@@ -52,10 +65,20 @@ const isHome = currentPath === `${prefix}/` || currentPath === prefix || (prefix
   </div>
 
   <div class="nav__mobile" id="mobile-menu">
+    <!-- Mobile panel header: logo + lang switcher -->
+    <div class="nav__mobile-header">
+      <a href={`${prefix}/`} class="nav__logo nav__mobile-logo">
+        <img src="/logo.png" alt="Sari Susanti Logo" style="height: 48px; width: auto; object-fit: contain;" />
+      </a>
+      <LanguageSwitcher locale={locale} />
+    </div>
+
+    <div class="nav__mobile-divider"></div>
+
     {navItems.map((item) => (
       <a 
         href={item.href} 
-        class:list={['nav__link', { 'is-active': currentPath === item.href || (item.href !== `/${locale}` && currentPath.startsWith(item.href)) }]}
+        class:list={['nav__link', { 'is-active': normalizedPath === item.href || (item.href !== `${prefix}/` && normalizedPath.startsWith(item.href)) }]}
       >
         {item.label}
       </a>
