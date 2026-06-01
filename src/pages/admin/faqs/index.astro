@@ -1,5 +1,6 @@
 ---
 import AdminLayout from '../../../layouts/AdminLayout.astro';
+import AdminDeleteButton from '../../../components/admin/AdminDeleteButton.astro';
 
 export const prerender = false;
 
@@ -53,10 +54,12 @@ if (Astro.request.method === 'POST') {
             <td class="p-4 text-right">
               <div class="flex justify-end gap-3 items-center">
                 <a href={`/admin/faqs/${faq.id}`} class="text-blue-600 font-bold no-underline transition-opacity hover:opacity-70">Edit</a>
-                <form method="POST" onsubmit="return confirm('Yakin ingin menghapus FAQ ini?');" class="m-0">
-                  <input type="hidden" name="id" value={faq.id} />
-                  <button type="submit" class="bg-transparent border-none text-red-600 cursor-pointer font-bold p-0 transition-opacity hover:opacity-70">Hapus</button>
-                </form>
+                <AdminDeleteButton 
+                  id={faq.id} 
+                  itemName="FAQ ini" 
+                  confirmMessage="Yakin ingin menghapus FAQ ini? Tindakan ini tidak dapat dibatalkan."
+                  successMessage="FAQ berhasil dihapus"
+                />
               </div>
             </td>
           </tr>

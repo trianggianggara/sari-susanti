@@ -1,5 +1,6 @@
 ---
 import AdminLayout from '../../../layouts/AdminLayout.astro';
+import AdminDeleteButton from '../../../components/admin/AdminDeleteButton.astro';
 
 export const prerender = false;
 
@@ -67,10 +68,12 @@ if (Astro.request.method === 'POST') {
             <td class="p-4 text-right">
               <div class="flex justify-end gap-3 items-center h-[50px]">
                 <a href={`/admin/testimonials/${t.id}`} class="text-blue-600 font-bold no-underline transition-opacity hover:opacity-70">Edit</a>
-                <form method="POST" onsubmit="return confirm('Yakin ingin menghapus testimoni ini?');" class="m-0">
-                  <input type="hidden" name="id" value={t.id} />
-                  <button type="submit" class="bg-transparent border-none text-red-600 cursor-pointer font-bold p-0 transition-opacity hover:opacity-70">Hapus</button>
-                </form>
+                <AdminDeleteButton 
+                  id={t.id} 
+                  itemName={t.customer_name} 
+                  confirmMessage={`Yakin ingin menghapus testimoni dari "${t.customer_name}"? Tindakan ini tidak dapat dibatalkan.`}
+                  successMessage={`Testimoni dari "${t.customer_name}" berhasil dihapus`}
+                />
               </div>
             </td>
           </tr>

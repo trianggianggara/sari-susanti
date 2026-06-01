@@ -69,7 +69,7 @@ export default function AdminSidebar({ currentPath }: AdminSidebarProps) {
     <aside class="admin-sidebar" role="navigation" aria-label="Menu admin">
       {/* Brand */}
       <div class="admin-sidebar__brand">
-        <div class="admin-sidebar__logo-mark" aria-hidden="true">SS</div>
+        <img src="/logo.png" alt="Sari Susanti Logo" class="admin-sidebar__logo-mark" />
         <div class="admin-sidebar__brand-text">
           <span class="admin-sidebar__brand-name">Sari Susanti</span>
           <span class="admin-sidebar__brand-sub">Admin Portal</span>

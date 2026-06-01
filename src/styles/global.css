@@ -341,20 +341,11 @@ p {
 }
 
 .admin-sidebar__logo-mark {
-  width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, var(--color-gold) 0%, var(--color-gold-dark) 100%);
-  color: var(--color-emerald-dark);
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-display);
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  height: 52px;
+  width: auto;
+  max-width: 160px;
+  object-fit: contain;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
 }
 
 .admin-sidebar__brand-text {
@@ -681,8 +672,8 @@ p {
 }
 
 @keyframes dialogIn {
-  from { opacity: 0; transform: scale(0.88) translateY(16px); }
-  to   { opacity: 1; transform: scale(1) translateY(0); }
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.88) translateY(16px); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1) translateY(0); }
 }
 
 @keyframes backdropIn {
@@ -691,8 +682,8 @@ p {
 }
 
 @keyframes cropperDialogIn {
-  from { opacity: 0; transform: scale(0.92) translateY(24px); }
-  to   { opacity: 1; transform: scale(1) translateY(0); }
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.92) translateY(24px); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1) translateY(0); }
 }
 
 #admin-toast-container {
@@ -796,7 +787,13 @@ p {
   box-shadow: var(--shadow-2xl);
   background: var(--color-white);
   width: min(440px, 90vw);
-  animation: dialogIn 0.3s var(--ease-spring) both;
+  /* Center the dialog perfectly despite animations */
+  margin: 0;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: dialogIn 0.35s var(--ease-spring) both;
 }
 
 #admin-confirm-dialog::backdrop {
@@ -897,6 +894,12 @@ p {
   width: min(700px, 96vw);
   max-height: 90vh;
   overflow: hidden;
+  /* Center the dialog perfectly despite animations */
+  margin: 0;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   animation: cropperDialogIn 0.35s var(--ease-spring) both;
 }
 
@@ -1212,3 +1215,220 @@ p {
   animation: statCardIn 0.5s var(--ease-spring) both;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   ADMIN UI — COMPREHENSIVE ANIMATION SYSTEM
+═══════════════════════════════════════════════════════════════ */
+
+/* ── Core keyframes ── */
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.88); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.55; }
+}
+
+@keyframes bounceIn {
+  0%   { opacity: 0; transform: scale(0.3); }
+  50%  { transform: scale(1.08); }
+  70%  { transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes spinOnce {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Scroll-reveal utility ── */
+
+/* Elements start invisible; JS (IntersectionObserver) adds .is-visible */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.55s var(--ease-smooth),
+    transform 0.55s var(--ease-smooth);
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal--left  { transform: translateX(-24px); }
+.reveal--right { transform: translateX(24px); }
+.reveal--scale { transform: scale(0.92); }
+
+.reveal--left.is-visible,
+.reveal--right.is-visible,
+.reveal--scale.is-visible {
+  transform: none;
+}
+
+/* Stagger children delays */
+.reveal--delay-1  { transition-delay: 0.05s; }
+.reveal--delay-2  { transition-delay: 0.1s; }
+.reveal--delay-3  { transition-delay: 0.15s; }
+.reveal--delay-4  { transition-delay: 0.2s; }
+.reveal--delay-5  { transition-delay: 0.25s; }
+.reveal--delay-6  { transition-delay: 0.3s; }
+
+/* ── Page entry animation ── */
+
+.page-enter {
+  animation: fadeUp 0.55s var(--ease-smooth) both;
+}
+
+/* ── Micro-interaction: card hover lift ── */
+
+.hover-lift {
+  transition: transform 200ms var(--ease-out), box-shadow 200ms var(--ease-out);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ── Skeleton loader ── */
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-sand) 25%,
+    var(--color-sand-light) 50%,
+    var(--color-sand) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Admin table row animations ── */
+
+.prod-row {
+  animation: fadeIn 0.35s var(--ease-out) both;
+}
+
+.prod-row:nth-child(1)  { animation-delay: 0.04s; }
+.prod-row:nth-child(2)  { animation-delay: 0.08s; }
+.prod-row:nth-child(3)  { animation-delay: 0.12s; }
+.prod-row:nth-child(4)  { animation-delay: 0.16s; }
+.prod-row:nth-child(5)  { animation-delay: 0.20s; }
+.prod-row:nth-child(6)  { animation-delay: 0.24s; }
+.prod-row:nth-child(7)  { animation-delay: 0.28s; }
+.prod-row:nth-child(8)  { animation-delay: 0.32s; }
+.prod-row:nth-child(9)  { animation-delay: 0.36s; }
+.prod-row:nth-child(10) { animation-delay: 0.40s; }
+
+/* ── Admin form card entrance ── */
+
+.pf-card {
+  animation: fadeUp 0.5s var(--ease-smooth) 0.05s both;
+}
+
+.pf-back {
+  animation: slideInLeft 0.4s var(--ease-smooth) both;
+}
+
+/* ── Sidebar entrance ── */
+
+.admin-sidebar {
+  animation: slideInLeft 0.45s var(--ease-spring) both;
+}
+
+.admin-sidebar__item:nth-child(1) .admin-sidebar__link { animation: fadeIn 0.4s var(--ease-out) 0.12s both; }
+.admin-sidebar__item:nth-child(2) .admin-sidebar__link { animation: fadeIn 0.4s var(--ease-out) 0.17s both; }
+.admin-sidebar__item:nth-child(3) .admin-sidebar__link { animation: fadeIn 0.4s var(--ease-out) 0.22s both; }
+.admin-sidebar__item:nth-child(4) .admin-sidebar__link { animation: fadeIn 0.4s var(--ease-out) 0.27s both; }
+.admin-sidebar__item:nth-child(5) .admin-sidebar__link { animation: fadeIn 0.4s var(--ease-out) 0.32s both; }
+.admin-sidebar__item:nth-child(6) .admin-sidebar__link { animation: fadeIn 0.4s var(--ease-out) 0.37s both; }
+
+/* ── Dashboard stat cards stagger ── */
+
+.dash-stat-card:nth-child(1) { animation-delay: 0.1s; }
+.dash-stat-card:nth-child(2) { animation-delay: 0.18s; }
+.dash-stat-card:nth-child(3) { animation-delay: 0.26s; }
+
+/* ── Dashboard action cards stagger ── */
+
+.dash-action-card:nth-child(1) { animation-delay: 0.24s; }
+.dash-action-card:nth-child(2) { animation-delay: 0.31s; }
+.dash-action-card:nth-child(3) { animation-delay: 0.38s; }
+.dash-action-card:nth-child(4) { animation-delay: 0.45s; }
+
+/* ── Top bar ── */
+
+.admin-topbar {
+  animation: fadeIn 0.4s var(--ease-out) 0.05s both;
+}
+
+/* ── Button loading spinner ── */
+
+@keyframes btnSpinner {
+  to { transform: rotate(360deg); }
+}
+
+.btn-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: btnSpinner 0.7s linear infinite;
+}
+
+/* ── Focus ring for keyboard nav ── */
+
+:focus-visible {
+  outline: 2.5px solid var(--color-gold);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Reduced motion safety ── */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}

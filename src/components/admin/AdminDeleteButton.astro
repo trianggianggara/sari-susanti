@@ -1,0 +1,72 @@
+---
+export interface Props {
+  id: string | number;
+  itemName: string;
+  confirmMessage?: string;
+  successMessage?: string;
+}
+
+const { 
+  id, 
+  itemName, 
+  confirmMessage = `Yakin ingin menghapus "${itemName}"? Tindakan ini tidak dapat dibatalkan.`,
+  successMessage = `"${itemName}" berhasil dihapus`
+} = Astro.props;
+---
+
+<form method="POST" class="admin-delete-form m-0" data-confirm-message={confirmMessage} data-success-message={successMessage}>
+  <input type="hidden" name="id" value={id} />
+  <button type="submit" class="bg-transparent border-none text-red-600 cursor-pointer font-bold p-0 transition-opacity hover:opacity-70">
+    <slot>Hapus</slot>
+  </button>
+</form>
+
+<script>
+  import { showConfirmDialog } from '@/lib/admin-dialog';
+  import { showToast }         from '@/lib/admin-toast';
+
+  document.querySelectorAll<HTMLFormElement>('.admin-delete-form').forEach((form) => {
+    if (form.dataset.initialized) return;
+    form.dataset.initialized = 'true';
+
+    form.addEventListener('submit', async (e: SubmitEvent) => {
+      e.preventDefault();
+
+      const confirmMsg = form.dataset.confirmMessage || 'Yakin ingin menghapus?';
+      const successMsg = form.dataset.successMessage || 'Berhasil dihapus.';
+
+      const confirmed = await showConfirmDialog(confirmMsg, { confirmLabel: 'Ya, Hapus' });
+      if (!confirmed) return;
+
+      const row = form.closest('tr');
+      if (row) {
+        row.style.opacity = '0.45';
+        row.style.pointerEvents = 'none';
+      }
+
+      try {
+        const res = await fetch(window.location.pathname, {
+          method:   'POST',
+          body:     new FormData(form),
+          redirect: 'manual',
+        });
+
+        if (res.ok || res.type === 'opaqueredirect' || res.status === 0 || res.redirected) {
+          if (row) {
+            row.style.transition = 'all 0.35s var(--ease-out)';
+            row.style.opacity    = '0';
+            row.style.transform  = 'translateX(24px)';
+            setTimeout(() => row.remove(), 380);
+          }
+          showToast(successMsg, 'success');
+        } else {
+          if (row) { row.style.opacity = '1'; row.style.pointerEvents = 'auto'; }
+          showToast('Gagal menghapus data. Coba lagi.', 'error');
+        }
+      } catch {
+        if (row) { row.style.opacity = '1'; row.style.pointerEvents = 'auto'; }
+        showToast('Terjadi kesalahan jaringan.', 'error');
+      }
+    });
+  });
+</script>
