@@ -572,6 +572,12 @@
   color: var(--color-charcoal);
 }
 
+.nav.is-scrolled .nav__brand-text,
+.nav.is-menu-open .nav__brand-text,
+.nav.nav--solid .nav__brand-text {
+  color: var(--color-charcoal);
+}
+
 .nav.is-scrolled .nav__logo img,
 .nav.is-menu-open .nav__logo img,
 .nav.nav--solid .nav__logo img {
@@ -593,15 +599,18 @@
 }
 
 .nav__logo img {
-  height: 48px;
+  height: auto;
   width: auto;
-  transform: scale(3.0) translateY(2px);
-  transform-origin: left center;
   transition: transform var(--duration-fast) var(--ease-spring), filter var(--duration-normal);
 }
 
 .nav__logo:hover img {
-  transform: scale(3.05) translateY(2px);
+  transform: scale(1.05) translateY(-2px);
+}
+
+.nav__brand-text {
+  color: var(--color-white);
+  transition: color var(--duration-fast) var(--ease-out);
 }
 
 .nav__links {
@@ -773,15 +782,12 @@
 }
 
 .footer__logo {
-  display: inline-block;
-  margin-top: -36px; /* Raise the logo further up */
-  margin-bottom: -56px; /* Pull tagline up even closer */
   position: relative;
   z-index: 2;
 }
 
 .footer__logo img {
-  height: 180px; /* Made logo even bigger */
+  height: auto;
   width: auto;
   display: block;
   filter: brightness(0) invert(1);
@@ -793,7 +799,7 @@
 }
 
 .footer__logo:hover img {
-  transform: scale(1.08) translateY(-4px);
+  transform: scale(1.05) translateY(-2px);
   filter: brightness(0) invert(1) drop-shadow(0 10px 20px rgba(212, 175, 55, 0.3)); /* Gold shadow */
   opacity: 1;
 }
