@@ -1173,8 +1173,6 @@
   .nav__links { display: none; }
   .nav__hamburger { display: flex; }
   .nav__lang-desktop { display: none; }
-  /* Hide main navbar logo on mobile — it lives inside the mobile panel */
-  .nav__inner .nav__logo { display: none; }
 }
 
 /* ── Language Switcher ──────────────────────────────────────── */
