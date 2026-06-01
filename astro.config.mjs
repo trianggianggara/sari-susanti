@@ -29,7 +29,7 @@ export default defineConfig({
     defaultLocale: 'id',
     locales: ['id', 'en'],
     routing: {
-      prefixDefaultLocale: true,
+      prefixDefaultLocale: false,
     },
     fallback: {
       en: 'id',

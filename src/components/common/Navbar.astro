@@ -10,21 +10,23 @@ export interface Props {
 const { locale } = Astro.props;
 const t = useTranslations(locale);
 
+const prefix = locale === 'id' ? '' : `/${locale}`;
+
 const navItems = [
-  { label: t('nav.home'), href: `/${locale}` },
-  { label: t('nav.menu'), href: `/${locale}/menu` },
-  { label: t('nav.about'), href: `/${locale}/about-us` },
-  { label: t('nav.faq'), href: `/${locale}/faq` },
-  { label: t('nav.contact'), href: `/${locale}/contact` },
+  { label: t('nav.home'), href: `${prefix}/` },
+  { label: t('nav.menu'), href: `${prefix}/menu` },
+  { label: t('nav.about'), href: `${prefix}/about-us` },
+  { label: t('nav.faq'), href: `${prefix}/faq` },
+  { label: t('nav.contact'), href: `${prefix}/contact` },
 ];
 
 const currentPath = Astro.url.pathname;
-const isHome = currentPath === `/${locale}` || currentPath === `/${locale}/`;
+const isHome = currentPath === `${prefix}/` || currentPath === prefix || (prefix === '' && currentPath === '/');
 ---
 
 <header class:list={['nav', { 'nav--solid': !isHome }]} id="main-nav">
   <div class="container nav__inner">
-    <a href={`/${locale}`} class="nav__logo">
+    <a href={`${prefix}/`} class="nav__logo">
       <img src="/logo.png" alt="Sari Susanti Logo" style="height: 60px; width: auto; object-fit: contain;" class="nav-logo-img" />
     </a>
 
@@ -32,7 +34,7 @@ const isHome = currentPath === `/${locale}` || currentPath === `/${locale}/`;
       {navItems.map((item) => (
         <a 
           href={item.href} 
-          class:list={['nav__link', { 'is-active': currentPath === item.href || (item.href !== `/${locale}` && currentPath.startsWith(item.href)) }]}
+          class:list={['nav__link', { 'is-active': currentPath === item.href || (item.href !== `${prefix}/` && currentPath.startsWith(item.href)) }]}
         >
           {item.label}
         </a>

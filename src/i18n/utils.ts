@@ -40,10 +40,18 @@ export function getLocalePath(pathname: string, targetLocale: Locale): string {
   const segments = pathname.split('/').filter(Boolean);
   const currentLocale = segments[0] as Locale;
 
-  if (currentLocale === 'id' || currentLocale === 'en') {
-    segments[0] = targetLocale;
+  const isCurrentLocalePrefix = currentLocale === 'id' || currentLocale === 'en';
+
+  if (targetLocale === 'id') {
+    if (isCurrentLocalePrefix) {
+      segments.shift(); // Remove the locale prefix
+    }
   } else {
-    segments.unshift(targetLocale);
+    if (isCurrentLocalePrefix) {
+      segments[0] = targetLocale;
+    } else {
+      segments.unshift(targetLocale);
+    }
   }
 
   return '/' + segments.join('/');

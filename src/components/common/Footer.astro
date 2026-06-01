@@ -11,12 +11,14 @@ const { locale } = Astro.props;
 const t = useTranslations(locale);
 const year = new Date().getFullYear();
 
+const prefix = locale === 'id' ? '' : `/${locale}`;
+
 const navLinks = [
-  { label: t('nav.home'), href: `/${locale}` },
-  { label: t('nav.menu'), href: `/${locale}/menu` },
-  { label: t('nav.about'), href: `/${locale}/about-us` },
-  { label: t('nav.faq'), href: `/${locale}/faq` },
-  { label: t('nav.contact'), href: `/${locale}/contact` },
+  { label: t('nav.home'), href: `${prefix}/` },
+  { label: t('nav.menu'), href: `${prefix}/menu` },
+  { label: t('nav.about'), href: `${prefix}/about-us` },
+  { label: t('nav.faq'), href: `${prefix}/faq` },
+  { label: t('nav.contact'), href: `${prefix}/contact` },
 ];
 ---
 
@@ -24,7 +26,7 @@ const navLinks = [
   <div class="container">
     <div class="footer__grid">
       <div>
-        <a href={`/${locale}`} class="footer__logo" style="display: inline-flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; text-decoration: none; margin-bottom: 0.75rem;">
+        <a href={`${prefix}/`} class="footer__logo" style="display: inline-flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; text-decoration: none; margin-bottom: 0.75rem;">
           <img src="/logo.png" alt="Sari Susanti Logo" style="height: 64px; width: auto; object-fit: contain;" />
           <span style="font-family: var(--font-display); font-size: 1.75rem; font-weight: 400; color: var(--color-white); letter-spacing: 0.02em;">Sari Susanti</span>
         </a>
