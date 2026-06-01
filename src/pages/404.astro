@@ -1,0 +1,174 @@
+---
+import Navbar from '../components/common/Navbar.astro';
+import Footer from '../components/common/Footer.astro';
+import WhatsAppButton from '../components/common/WhatsAppButton.astro';
+import '../styles/global.css';
+import '../styles/animations.css';
+import '../styles/components.css';
+
+// Try to detect locale from URL or Accept-Language header, default to 'id'
+const acceptLang = Astro.request.headers.get('accept-language') ?? '';
+const locale = acceptLang.toLowerCase().startsWith('en') ? 'en' : 'id';
+---
+
+<!DOCTYPE html>
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>{locale === 'en' ? 'Page Not Found | Sari Susanti' : 'Halaman Tidak Ditemukan | Sari Susanti'}</title>
+    <meta name="description" content={locale === 'en' ? 'The page you are looking for does not exist.' : 'Halaman yang Anda cari tidak ditemukan.'} />
+    <meta name="robots" content="noindex" />
+  </head>
+  <body>
+    <Navbar locale={locale} />
+
+    <main id="main-content" class="not-found">
+      <!-- Decorative background -->
+      <div class="not-found__bg" aria-hidden="true">
+        <span class="not-found__num">404</span>
+      </div>
+
+      <div class="container not-found__inner">
+        <!-- Ornament -->
+        <div class="not-found__ornament" aria-hidden="true">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H7l5-8v4h4l-5 8z" fill="currentColor"/>
+          </svg>
+        </div>
+
+        <div class="section-eyebrow">
+          {locale === 'en' ? 'Page Not Found' : 'Halaman Tidak Ditemukan'}
+        </div>
+
+        <h1 class="not-found__title">
+          {locale === 'en'
+            ? <>Oops, this page<br /><em>doesn't exist</em></>
+            : <>Aduh, halaman ini<br /><em>tidak ditemukan</em></>
+          }
+        </h1>
+
+        <p class="not-found__desc">
+          {locale === 'en'
+            ? 'The page you are looking for may have been moved, deleted, or perhaps never existed. Let us take you back to the warmth of our kitchen.'
+            : 'Halaman yang Anda cari mungkin telah dipindahkan, dihapus, atau mungkin tidak pernah ada. Mari kami antarkan kembali ke kehangatan dapur kami.'
+          }
+        </p>
+
+        <div class="not-found__actions">
+          <a href={locale === 'en' ? '/en/' : '/'} class="btn btn--primary">
+            {locale === 'en' ? '← Back to Home' : '← Kembali ke Beranda'}
+          </a>
+          <a href={locale === 'en' ? '/en/menu' : '/menu'} class="btn btn--outline">
+            {locale === 'en' ? 'View Our Menu' : 'Lihat Menu Kami'}
+          </a>
+        </div>
+      </div>
+    </main>
+
+    <Footer locale={locale} />
+    <WhatsAppButton />
+
+    <style>
+      .not-found {
+        min-height: calc(100vh - var(--nav-height));
+        padding-top: var(--nav-height);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        background: var(--color-ivory);
+      }
+
+      /* Giant ghost "404" text in background */
+      .not-found__bg {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+        user-select: none;
+        z-index: 0;
+      }
+
+      .not-found__num {
+        font-family: var(--font-display);
+        font-size: clamp(12rem, 30vw, 28rem);
+        font-weight: 700;
+        color: transparent;
+        -webkit-text-stroke: 1px var(--color-sand);
+        letter-spacing: -0.05em;
+        line-height: 1;
+        opacity: 0.5;
+      }
+
+      .not-found__inner {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+        padding-block: var(--space-section);
+        max-width: 680px;
+        margin-inline: auto;
+      }
+
+      /* Gold leaf icon */
+      .not-found__ornament {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 64px;
+        height: 64px;
+        border-radius: var(--radius-full);
+        background: var(--color-gold-glass);
+        border: 1px solid var(--color-gold-glass2);
+        color: var(--color-gold-dark);
+        margin-inline: auto;
+        margin-bottom: var(--space-6);
+        animation: float 4s ease-in-out infinite;
+      }
+
+      .section-eyebrow {
+        margin-bottom: var(--space-4);
+      }
+
+      .not-found__title {
+        font-family: var(--font-display);
+        font-size: clamp(2.2rem, 5vw, 3.5rem);
+        font-weight: 600;
+        color: var(--color-charcoal);
+        line-height: var(--leading-tight);
+        margin-bottom: var(--space-6);
+        letter-spacing: var(--tracking-tight);
+      }
+
+      .not-found__title em {
+        font-style: italic;
+        color: var(--color-emerald);
+      }
+
+      .not-found__desc {
+        font-size: var(--text-lg);
+        color: var(--color-stone);
+        line-height: var(--leading-relaxed);
+        max-width: 55ch;
+        margin-inline: auto;
+        margin-bottom: var(--space-10);
+      }
+
+      .not-found__actions {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-4);
+        flex-wrap: wrap;
+      }
+
+      @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+      }
+    </style>
+  </body>
+</html>
