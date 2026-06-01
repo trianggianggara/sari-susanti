@@ -16,6 +16,7 @@ export function getStaticPaths() {
 
 const { locale } = Astro.params as { locale: Locale };
 const t = useTranslations(locale);
+const isEn = locale === 'en';
 
 const [{ data: categories }, { data: products }] = await Promise.all([
   supabasePublic
@@ -115,19 +116,19 @@ const activeProducts = (products as any as LocalizedProduct[]) || [];
                       {formatPrice(product.price, locale)}
                     </span>
                   </div>
-                  <a
-                    href={buildWhatsAppUrl(
-                      locale,
-                      locale === "en"
-                        ? product.name_en || product.name
-                        : product.name,
-                    )}
-                    class="btn btn-primary btn-sm"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    class="btn btn--primary btn--sm btn-add-cart"
+                    data-slug={product.slug}
+                    data-name={locale === "en" ? product.name_en || product.name : product.name}
+                    data-price={product.price ?? ''}
+                    data-image={product.image_url || ''}
                   >
-                    {t("nav.order")}
-                  </a>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-right:5px">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    {isEn ? 'Add to Order' : 'Tambah Pesanan'}
+                  </button>
                 </div>
               </div>
             </div>
@@ -175,5 +176,40 @@ const activeProducts = (products as any as LocalizedProduct[]) || [];
         });
       });
     });
+  });
+</script>
+
+<script>
+  // Add to Cart handler
+  const CART_KEY = 'ss_cart';
+  const CART_EVENT = 'ss:cart-updated';
+  function getItems() { try { return JSON.parse(localStorage.getItem(CART_KEY) || '[]'); } catch { return []; } }
+  function saveItems(items) {
+    localStorage.setItem(CART_KEY, JSON.stringify(items));
+    window.dispatchEvent(new CustomEvent(CART_EVENT, { detail: items }));
+  }
+
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.btn-add-cart');
+    if (!btn) return;
+
+    const { slug, name, price, image } = btn.dataset;
+    const items = getItems();
+    const existing = items.find(i => i.slug === slug);
+    if (existing) {
+      existing.qty += 1;
+    } else {
+      items.push({ slug, name, price: price ? Number(price) : null, image, qty: 1 });
+    }
+    saveItems(items);
+
+    // Visual feedback
+    const original = btn.innerHTML;
+    btn.innerHTML = '✓ ' + (btn.textContent.trim().startsWith('Add') ? 'Added!' : 'Ditambahkan!');
+    btn.disabled = true;
+    setTimeout(() => { btn.innerHTML = original; btn.disabled = false; }, 1200);
+
+    // Open cart drawer
+    window.dispatchEvent(new CustomEvent('ss:open-cart'));
   });
 </script>

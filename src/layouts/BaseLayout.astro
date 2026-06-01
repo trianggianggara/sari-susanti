@@ -4,6 +4,7 @@ import BaseHead from '../components/common/BaseHead.astro';
 import Navbar from '../components/common/Navbar.astro';
 import Footer from '../components/common/Footer.astro';
 import WhatsAppButton from '../components/common/WhatsAppButton.astro';
+import CartDrawer from '../components/common/CartDrawer.astro';
 import '../styles/global.css';
 import '../styles/animations.css';
 import '../styles/components.css';
@@ -30,6 +31,7 @@ const { locale, title, description, image } = Astro.props;
     </main>
     <Footer locale={locale} />
     <WhatsAppButton />
+    <CartDrawer locale={locale} />
 
     <script>
       // Initialize Scroll Reveal Observers
