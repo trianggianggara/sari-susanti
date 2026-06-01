@@ -57,3 +57,21 @@ VALUES
   ('Berapa minimal order untuk Nasi Kotak?', 'What is the minimum order for Rice Boxes?', 'Minimal pemesanan untuk Nasi Kotak adalah 20 porsi.', 'The minimum order for Rice Boxes is 20 portions.', true, 1),
   ('Apakah melayani pengiriman ke luar kota?', 'Do you deliver out of town?', 'Saat ini kami hanya melayani pengiriman untuk wilayah Tasikmalaya dan sekitarnya.', 'Currently, we only deliver within the Tasikmalaya area and its surroundings.', true, 2),
   ('Berapa hari sebelum acara saya harus memesan?', 'How many days in advance should I order?', 'Untuk hasil yang maksimal, kami sarankan untuk memesan minimal H-3 sebelum acara.', 'For best results, we recommend ordering at least 3 days before your event.', true, 3);
+
+-- 6. Insert Site Settings (Promo Banner)
+INSERT INTO site_settings (key, value, description)
+VALUES
+  ('promo_banner_active', 'true', 'Toggle to show or hide the promo banner (true/false)'),
+  ('promo_banner_text_id', '🎉 Promo Spesial: Diskon 20% untuk pemesanan pertama bulan ini!', 'Indonesian text for the promo banner'),
+  ('promo_banner_text_en', '🎉 Special Promo: 20% off for your first order this month!', 'English text for the promo banner'),
+  ('promo_banner_cta_id', 'Klaim Promo', 'Indonesian text for the CTA button'),
+  ('promo_banner_cta_en', 'Claim Promo', 'English text for the CTA button'),
+  ('promo_banner_link', '/order', 'URL for the CTA button')
+ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
+
+-- 7. Insert Dummy Banners (For Hero Slider / Admin Dashboard)
+INSERT INTO banners (id, title, title_en, subtitle, subtitle_en, image_url, cta_text, cta_text_en, cta_link, is_active, sort_order)
+VALUES
+  ('3f7c46c1-5e7e-4b47-97d8-999999999991', 'Sari Susanti', 'Sari Susanti', 'Sari Rasa Nusantara, Sentuhan Selera Ibu.', 'The Authentic Taste of Nusantara.', 'https://picsum.photos/seed/hero1/1920/1080', 'Lihat Menu', 'View Menu', '/menu', true, 1),
+  ('3f7c46c1-5e7e-4b47-97d8-999999999992', 'Katering Premium', 'Premium Catering', 'Hidangan spesial untuk momen berharga Anda.', 'Special dishes for your precious moments.', 'https://picsum.photos/seed/hero2/1920/1080', 'Pesan Sekarang', 'Order Now', '/order', true, 2)
+ON CONFLICT (id) DO NOTHING;
