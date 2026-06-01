@@ -1,0 +1,17 @@
+{
+  "name": "Sari Susanti Catering & Jajanan Pasar",
+  "short_name": "Sari Susanti",
+  "description": "Sari Rasa Nusantara, Sentuhan Selera Ibu. Premium Indonesian Catering.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FDFBF7",
+  "theme_color": "#1F4A24",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
