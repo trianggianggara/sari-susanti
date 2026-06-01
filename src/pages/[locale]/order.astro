@@ -1,0 +1,491 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { useTranslations, LOCALES, type Locale } from '../../i18n/utils';
+import { WHATSAPP_NUMBER } from '../../lib/constants';
+
+export function getStaticPaths() {
+  return LOCALES.map((locale) => ({ params: { locale } }));
+}
+
+const { locale } = Astro.params as { locale: Locale };
+const t = useTranslations(locale);
+const prefix = locale === 'id' ? '' : `/${locale}`;
+---
+
+<BaseLayout
+  locale={locale}
+  title={t('order.page_title')}
+  description={t('order.subtitle')}
+>
+  <section class="order-hero">
+    <div class="container">
+      <span class="eyebrow">{t('order.eyebrow')}</span>
+      <h1 class="order-hero__title">{t('order.title')}</h1>
+      <p class="order-hero__subtitle">{t('order.subtitle')}</p>
+    </div>
+  </section>
+
+  <section class="order-section">
+    <div class="container order-container">
+
+      <!-- Info sidebar -->
+      <aside class="order-sidebar">
+        <div class="order-info-card">
+          <div class="order-info-card__icon">🎉</div>
+          <h3 class="order-info-card__title">
+            {locale === 'id' ? 'Jenis Acara' : 'Event Types'}
+          </h3>
+          <ul class="order-info-card__list">
+            <li>{t('order.event_birthday')}</li>
+            <li>{t('order.event_wedding')}</li>
+            <li>{t('order.event_khitan')}</li>
+            <li>{t('order.event_arisan')}</li>
+            <li>{t('order.event_corporate')}</li>
+            <li>{t('order.event_other')}</li>
+          </ul>
+        </div>
+        <div class="order-info-card">
+          <div class="order-info-card__icon">⏱️</div>
+          <h3 class="order-info-card__title">
+            {locale === 'id' ? 'Waktu Respons' : 'Response Time'}
+          </h3>
+          <p class="order-info-card__desc">
+            {locale === 'id'
+              ? 'Kami biasanya merespons dalam 1–2 jam di hari kerja (Senin–Sabtu, 08.00–20.00 WIB).'
+              : 'We typically respond within 1–2 hours on working days (Mon–Sat, 8AM–8PM WIB).'}
+          </p>
+        </div>
+        <div class="order-info-card">
+          <div class="order-info-card__icon">📋</div>
+          <h3 class="order-info-card__title">
+            {locale === 'id' ? 'Min. Pemesanan' : 'Min. Order'}
+          </h3>
+          <p class="order-info-card__desc">
+            {locale === 'id'
+              ? 'Minimal 10 porsi per item. Pemesanan minimal 3 hari sebelum acara.'
+              : 'Minimum 10 portions per item. Orders must be placed at least 3 days in advance.'}
+          </p>
+        </div>
+      </aside>
+
+      <!-- Order form -->
+      <div class="order-form-wrapper">
+        <form class="order-form" id="order-form" novalidate>
+
+          <!-- Row: Name + Phone -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="order-name">
+                {t('order.name')}
+                <span class="form-required">*</span>
+              </label>
+              <input
+                type="text"
+                id="order-name"
+                name="name"
+                class="form-input"
+                placeholder={t('order.name_ph')}
+                required
+                autocomplete="name"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="order-phone">
+                {t('order.phone')}
+                <span class="form-required">*</span>
+              </label>
+              <input
+                type="tel"
+                id="order-phone"
+                name="phone"
+                class="form-input"
+                placeholder={t('order.phone_ph')}
+                required
+                autocomplete="tel"
+              />
+            </div>
+          </div>
+
+          <!-- Row: Event type + Date -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="order-event">
+                {t('order.event_type')}
+                <span class="form-required">*</span>
+              </label>
+              <select id="order-event" name="event" class="form-input form-select" required>
+                <option value="" disabled selected>{t('order.event_ph')}</option>
+                <option value={t('order.event_birthday')}>{t('order.event_birthday')}</option>
+                <option value={t('order.event_wedding')}>{t('order.event_wedding')}</option>
+                <option value={t('order.event_khitan')}>{t('order.event_khitan')}</option>
+                <option value={t('order.event_arisan')}>{t('order.event_arisan')}</option>
+                <option value={t('order.event_corporate')}>{t('order.event_corporate')}</option>
+                <option value={t('order.event_other')}>{t('order.event_other')}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="order-date">
+                {t('order.date')}
+                <span class="form-required">*</span>
+              </label>
+              <input
+                type="date"
+                id="order-date"
+                name="date"
+                class="form-input"
+                required
+              />
+            </div>
+          </div>
+
+          <!-- Row: Guests + Location -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="order-guests">
+                {t('order.guests')}
+                <span class="form-required">*</span>
+              </label>
+              <input
+                type="number"
+                id="order-guests"
+                name="guests"
+                class="form-input"
+                placeholder={t('order.guests_ph')}
+                min="10"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="order-location">
+                {t('order.location')}
+                <span class="form-required">*</span>
+              </label>
+              <input
+                type="text"
+                id="order-location"
+                name="location"
+                class="form-input"
+                placeholder={t('order.location_ph')}
+                required
+              />
+            </div>
+          </div>
+
+          <!-- Menu interest -->
+          <div class="form-group">
+            <label class="form-label" for="order-menu">
+              {t('order.menu_interest')}
+            </label>
+            <textarea
+              id="order-menu"
+              name="menu"
+              class="form-input form-textarea"
+              placeholder={t('order.menu_interest_ph')}
+              rows="3"
+            ></textarea>
+          </div>
+
+          <!-- Notes -->
+          <div class="form-group">
+            <label class="form-label" for="order-notes">
+              {t('order.notes')}
+            </label>
+            <textarea
+              id="order-notes"
+              name="notes"
+              class="form-input form-textarea"
+              placeholder={t('order.notes_ph')}
+              rows="3"
+            ></textarea>
+          </div>
+
+          <!-- Submit -->
+          <div class="form-submit-row">
+            <p class="form-hint">
+              <span class="form-required">*</span> {t('order.required')}
+            </p>
+            <button type="submit" class="btn btn-whatsapp order-submit-btn" id="order-submit">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+              </svg>
+              {t('order.submit')}
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script define:vars={{ WHATSAPP_NUMBER, locale }}>
+  const form = document.getElementById('order-form');
+
+  // Set min date to tomorrow
+  const dateInput = document.getElementById('order-date');
+  if (dateInput) {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 3);
+    dateInput.min = tomorrow.toISOString().split('T')[0];
+  }
+
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const data = Object.fromEntries(new FormData(form));
+
+    // Validate required fields
+    const required = ['name', 'phone', 'event', 'date', 'guests', 'location'];
+    const missing = required.filter(f => !data[f]);
+    if (missing.length > 0) {
+      missing.forEach(f => {
+        const el = form.querySelector(`[name="${f}"]`);
+        el?.classList.add('form-input--error');
+      });
+      return;
+    }
+
+    // Format date nicely
+    const dateObj = new Date(data.date);
+    const dateFormatted = dateObj.toLocaleDateString(locale === 'id' ? 'id-ID' : 'en-US', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+
+    // Build optional sections
+    const menuSection = data.menu
+      ? `\n🍽️ ${locale === 'id' ? 'Menu yang diinginkan' : 'Desired menu'}: ${data.menu}`
+      : '';
+    const notesSection = data.notes
+      ? `\n📝 ${locale === 'id' ? 'Catatan' : 'Notes'}: ${data.notes}`
+      : '';
+
+    // Build WhatsApp message
+    const message = locale === 'id'
+      ? `Halo Sari Susanti! 🙏\n\nSaya ingin memesan katering dengan detail berikut:\n\n👤 Nama: ${data.name}\n📱 No. WhatsApp: ${data.phone}\n🎉 Jenis Acara: ${data.event}\n📅 Tanggal Acara: ${dateFormatted}\n👥 Jumlah Tamu: ${data.guests} orang\n📍 Lokasi: ${data.location}${menuSection}${notesSection}\n\nMohon informasi lebih lanjut. Terima kasih! 🙏`
+      : `Hello Sari Susanti! 🙏\n\nI'd like to place a catering order with the following details:\n\n👤 Name: ${data.name}\n📱 WhatsApp: ${data.phone}\n🎉 Event Type: ${data.event}\n📅 Event Date: ${dateFormatted}\n👥 Guests: ${data.guests} people\n📍 Location: ${data.location}${menuSection}${notesSection}\n\nPlease provide further information. Thank you! 🙏`;
+
+    const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+    window.open(waUrl, '_blank');
+  });
+
+  // Clear error on input
+  form?.querySelectorAll('.form-input').forEach(input => {
+    input.addEventListener('input', () => input.classList.remove('form-input--error'));
+  });
+</script>
+
+<style>
+/* ── Order Page ── */
+.order-hero {
+  background: var(--color-ivory-warm);
+  padding: var(--space-16) 0 var(--space-10);
+  text-align: center;
+  border-bottom: 1px solid var(--color-sand);
+}
+
+.order-hero__title {
+  font-family: var(--font-display);
+  font-size: var(--text-4xl);
+  font-style: italic;
+  font-weight: 500;
+  color: var(--color-charcoal);
+  margin: var(--space-3) 0 var(--space-4);
+  line-height: var(--leading-tight);
+}
+
+.order-hero__subtitle {
+  color: var(--color-stone);
+  font-size: var(--text-lg);
+  max-width: 520px;
+  margin: 0 auto;
+  line-height: var(--leading-relaxed);
+}
+
+.order-section {
+  padding: var(--space-16) 0 var(--space-20);
+  background: var(--color-white);
+}
+
+.order-container {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: var(--space-12);
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .order-container {
+    grid-template-columns: 1fr;
+  }
+  .order-sidebar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-4);
+  }
+}
+
+/* ── Sidebar ── */
+.order-info-card {
+  background: var(--color-ivory-warm);
+  border: 1px solid var(--color-sand);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5) var(--space-6);
+  margin-bottom: var(--space-4);
+}
+
+.order-info-card__icon {
+  font-size: 1.5rem;
+  margin-bottom: var(--space-3);
+}
+
+.order-info-card__title {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-charcoal);
+  margin-bottom: var(--space-3);
+}
+
+.order-info-card__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.order-info-card__list li {
+  font-size: var(--text-sm);
+  color: var(--color-stone);
+  padding-left: var(--space-4);
+  position: relative;
+}
+
+.order-info-card__list li::before {
+  content: '·';
+  position: absolute;
+  left: var(--space-2);
+  color: var(--color-gold);
+  font-weight: 700;
+}
+
+.order-info-card__desc {
+  font-size: var(--text-sm);
+  color: var(--color-stone);
+  line-height: var(--leading-relaxed);
+}
+
+/* ── Form ── */
+.order-form-wrapper {
+  background: var(--color-white);
+  border: 1px solid var(--color-sand);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-10) var(--space-10);
+  box-shadow: 0 4px 32px rgba(44, 44, 44, 0.05);
+}
+
+.order-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-5);
+}
+
+@media (max-width: 600px) {
+  .form-row { grid-template-columns: 1fr; }
+  .order-form-wrapper { padding: var(--space-6); }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.form-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-charcoal);
+  letter-spacing: 0.02em;
+}
+
+.form-required {
+  color: var(--color-gold-dark);
+  margin-left: 2px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.75em 1em;
+  border: 1.5px solid var(--color-sand);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--color-charcoal);
+  background: var(--color-white);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.form-input::placeholder {
+  color: var(--color-stone-light);
+}
+
+.form-input:focus {
+  border-color: var(--color-emerald);
+  box-shadow: 0 0 0 3px var(--color-emerald-glass);
+}
+
+.form-input--error {
+  border-color: var(--color-error) !important;
+  box-shadow: 0 0 0 3px rgba(196, 69, 54, 0.1) !important;
+}
+
+.form-select {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238B7D6B' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 2.5em;
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 90px;
+  line-height: var(--leading-relaxed);
+}
+
+input[type="date"].form-input {
+  cursor: pointer;
+}
+
+.form-submit-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-sand);
+  flex-wrap: wrap;
+}
+
+.form-hint {
+  font-size: var(--text-sm);
+  color: var(--color-stone-light);
+}
+
+.order-submit-btn {
+  padding: 0.9em 2.5em;
+  font-size: var(--text-base);
+  gap: var(--space-2);
+  border-radius: var(--radius-full);
+}
+</style>

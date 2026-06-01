@@ -273,6 +273,7 @@
   flex: 1;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -896,6 +897,20 @@
   align-items: center;
   gap: var(--space-3);
 }
+
+/* Gold CTA button in navbar */
+.nav__order-btn {
+  font-size: 11px;
+  padding: 0.55em 1.2em;
+  letter-spacing: 0.1em;
+  box-shadow: none;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .nav__order-btn { display: none; }
+}
+
 
 /* Mobile nav */
 .nav__hamburger {
