@@ -2,6 +2,7 @@
 import type { Locale } from '../../i18n/utils';
 import { useTranslations } from '../../i18n/utils';
 import LanguageSwitcher from './LanguageSwitcher.astro';
+import { BRAND } from '../../lib/constants';
 
 export interface Props {
   locale: Locale;
@@ -35,6 +36,9 @@ const isHome =
   normalizedPath === prefix;
 ---
 
+<!-- Backdrop overlay -->
+<div class="nav__overlay" id="nav-overlay" aria-hidden="true"></div>
+
 <header class:list={['nav', { 'nav--solid': !isHome }]} id="main-nav">
   <div class="container nav__inner">
     <a href={`${prefix}/`} class="nav__logo">
@@ -56,7 +60,7 @@ const isHome =
       <span class="nav__lang-desktop">
         <LanguageSwitcher locale={locale} />
       </span>
-      <button class="nav__hamburger" id="nav-toggle" aria-label="Menu">
+      <button class="nav__hamburger" id="nav-toggle" aria-label="Menu" aria-expanded="false" aria-controls="mobile-menu">
         <span></span>
         <span></span>
         <span></span>
@@ -64,34 +68,69 @@ const isHome =
     </div>
   </div>
 
-  <div class="nav__mobile" id="mobile-menu">
-    <!-- Mobile panel header: logo + lang switcher -->
+  <div class="nav__mobile" id="mobile-menu" role="dialog" aria-modal="true" aria-label="Navigation Menu">
+    <!-- Panel header: logo only -->
     <div class="nav__mobile-header">
       <a href={`${prefix}/`} class="nav__logo nav__mobile-logo">
-        <img src="/logo.png" alt="Sari Susanti Logo" style="height: 48px; width: auto; object-fit: contain;" />
+        <img src="/logo.png" alt="Sari Susanti Logo" style="height: 44px; width: auto; object-fit: contain;" />
       </a>
-      <LanguageSwitcher locale={locale} />
     </div>
 
-    <div class="nav__mobile-divider"></div>
+    <!-- Nav links -->
+    <nav class="nav__mobile-links">
+      {navItems.map((item) => (
+        <a 
+          href={item.href} 
+          class:list={['nav__link', { 'is-active': normalizedPath === item.href || (item.href !== `${prefix}/` && normalizedPath.startsWith(item.href)) }]}
+        >
+          {item.label}
+        </a>
+      ))}
+    </nav>
 
-    {navItems.map((item) => (
-      <a 
-        href={item.href} 
-        class:list={['nav__link', { 'is-active': normalizedPath === item.href || (item.href !== `${prefix}/` && normalizedPath.startsWith(item.href)) }]}
-      >
-        {item.label}
-      </a>
-    ))}
+    <!-- Panel footer: tagline + lang -->
+    <div class="nav__mobile-footer">
+      <span class="nav__mobile-footer-tagline">{BRAND.tagline}</span>
+      <LanguageSwitcher locale={locale} />
+    </div>
   </div>
 </header>
 
 <script>
   // Setup navbar scroll effect and mobile menu toggle
   document.addEventListener('DOMContentLoaded', () => {
-    const nav = document.getElementById('main-nav');
-    const toggle = document.getElementById('nav-toggle');
-    const mobileMenu = document.getElementById('mobile-menu');
+    const nav      = document.getElementById('main-nav');
+    const toggle   = document.getElementById('nav-toggle');
+    const overlay  = document.getElementById('nav-overlay');
+    const menu     = document.getElementById('mobile-menu');
+
+    function openMenu() {
+      menu?.classList.add('is-open');
+      overlay?.classList.add('is-visible');
+      document.body.style.overflow = 'hidden';
+      toggle?.setAttribute('aria-expanded', 'true');
+      const spans = toggle?.querySelectorAll('span') as NodeListOf<HTMLElement>;
+      if (spans) {
+        (spans[0] as HTMLElement).style.transform = 'translateY(3.75px) rotate(45deg)';
+        (spans[0] as HTMLElement).style.width = '100%';
+        (spans[1] as HTMLElement).style.transform = 'translateY(-3.75px) rotate(-45deg)';
+        (spans[1] as HTMLElement).style.width = '100%';
+      }
+    }
+
+    function closeMenu() {
+      menu?.classList.remove('is-open');
+      overlay?.classList.remove('is-visible');
+      document.body.style.overflow = '';
+      toggle?.setAttribute('aria-expanded', 'false');
+      const spans = toggle?.querySelectorAll('span') as NodeListOf<HTMLElement>;
+      if (spans) {
+        (spans[0] as HTMLElement).style.transform = 'none';
+        (spans[0] as HTMLElement).style.width = '';
+        (spans[1] as HTMLElement).style.transform = 'none';
+        (spans[1] as HTMLElement).style.width = '';
+      }
+    }
 
     window.addEventListener('scroll', () => {
       if (window.scrollY > 20) {
@@ -102,19 +141,16 @@ const isHome =
     });
 
     toggle?.addEventListener('click', () => {
-      mobileMenu?.classList.toggle('is-open');
-      const spans = toggle.querySelectorAll('span');
-      if (mobileMenu?.classList.contains('is-open')) {
-        nav?.classList.add('is-menu-open');
-        spans[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
-        spans[1].style.opacity = '0';
-        spans[2].style.transform = 'rotate(-45deg) translate(5px, -5px)';
+      if (menu?.classList.contains('is-open')) {
+        closeMenu();
       } else {
-        nav?.classList.remove('is-menu-open');
-        spans[0].style.transform = 'none';
-        spans[1].style.opacity = '1';
-        spans[2].style.transform = 'none';
+        openMenu();
       }
+    });
+
+    overlay?.addEventListener('click', closeMenu);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeMenu();
     });
   });
 </script>
