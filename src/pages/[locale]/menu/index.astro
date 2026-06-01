@@ -77,7 +77,7 @@ const activeProducts = (products as any as LocalizedProduct[]) || [];
             >
               <a
                 href={`/${locale}/menu/${product.slug}`}
-                class="product-card__image"
+                class="product-card__image skeleton-img-wrapper"
               >
                 <img
                   src={product.image_url || "/placeholder.jpg"}

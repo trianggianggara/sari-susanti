@@ -41,7 +41,24 @@ const { locale, title, description, image } = Astro.props;
     <script>
       // Initialize Scroll Reveal Observers
       document.addEventListener('DOMContentLoaded', () => {
+        // Handle Skeleton Loading Images
+        const skeletonImages = document.querySelectorAll('.skeleton-img-wrapper img');
+        skeletonImages.forEach((img: any) => {
+          if (img.complete) {
+            img.parentElement.classList.add('is-loaded');
+          } else {
+            img.addEventListener('load', () => {
+              img.parentElement.classList.add('is-loaded');
+            });
+            img.addEventListener('error', () => {
+              img.parentElement.classList.add('is-loaded'); // Remove skeleton on error too
+            });
+          }
+        });
+
+        // Initialize Scroll Reveals
         const observerOptions = {
+
           root: null,
           rootMargin: '0px',
           threshold: 0.15

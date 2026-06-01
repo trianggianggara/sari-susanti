@@ -46,7 +46,7 @@ const product = productData as unknown as LocalizedProduct;
       </a>
 
       <div class="detail-grid">
-        <div class="detail-image reveal-scale">
+        <div class="detail-image reveal-scale skeleton-img-wrapper">
           <img src={product.image_url || "/placeholder.jpg"} alt={locale === 'en' ? (product.name_en || product.name) : product.name} />
         </div>
         

@@ -27,7 +27,7 @@ const isEn = locale === 'en';
     <div class="grid-3">
       {products.map((product, index) => (
         <div class={`product-card reveal stagger-${(index % 3) + 1}`}>
-          <a href={`/${locale}/menu/${product.slug}`} class="product-card__image">
+          <a href={`/${locale}/menu/${product.slug}`} class="product-card__image skeleton-img-wrapper">
             {product.is_featured && <span class="product-card__badge">{t('menu.featured')}</span>}
             <img src={product.image_url || '/placeholder.jpg'} alt={isEn ? (product.name_en || product.name) : product.name} loading="lazy" />
           </a>
