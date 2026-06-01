@@ -101,7 +101,7 @@ const isHome =
 
 <script>
   // Setup navbar scroll effect and mobile menu toggle
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('astro:page-load', () => {
     const nav      = document.getElementById('main-nav');
     const toggle   = document.getElementById('nav-toggle');
     const overlay  = document.getElementById('nav-overlay');
@@ -135,13 +135,48 @@ const isHome =
       }
     }
 
-    window.addEventListener('scroll', () => {
+    const handleScroll = () => {
+      const currentNav = document.getElementById('main-nav');
       if (window.scrollY > 20) {
-        nav?.classList.add('is-scrolled');
+        currentNav?.classList.add('is-scrolled');
       } else {
-        nav?.classList.remove('is-scrolled');
+        currentNav?.classList.remove('is-scrolled');
       }
-    });
+    };
+
+    (window as any).__ssNavInit = (window as any).__ssNavInit || {};
+    
+    if (!(window as any).__ssNavInit.scroll) {
+      window.addEventListener('scroll', handleScroll);
+      (window as any).__ssNavInit.scroll = true;
+    }
+
+    if (!(window as any).__ssNavInit.resize) {
+      window.addEventListener('resize', () => {
+        if (window.innerWidth >= 768) {
+          const currentMenu = document.getElementById('mobile-menu');
+          const currentOverlay = document.getElementById('nav-overlay');
+          const currentToggle = document.getElementById('nav-toggle');
+          
+          currentMenu?.classList.remove('is-open');
+          currentOverlay?.classList.remove('is-visible');
+          document.body.style.overflow = '';
+          currentToggle?.setAttribute('aria-expanded', 'false');
+          
+          const spans = currentToggle?.querySelectorAll('span');
+          if (spans && spans.length > 1) {
+            (spans[0] as HTMLElement).style.transform = 'none';
+            (spans[0] as HTMLElement).style.width = '';
+            (spans[1] as HTMLElement).style.transform = 'none';
+            (spans[1] as HTMLElement).style.width = '';
+          }
+        }
+      });
+      (window as any).__ssNavInit.resize = true;
+    }
+
+    // Trigger scroll once on load to set initial state
+    handleScroll();
 
     toggle?.addEventListener('click', () => {
       if (menu?.classList.contains('is-open')) {

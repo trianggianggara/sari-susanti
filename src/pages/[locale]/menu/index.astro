@@ -166,7 +166,7 @@ const activeProducts = (products as any as LocalizedProduct[]) || [];
 </style>
 
 <script>
-  document.addEventListener("DOMContentLoaded", () => {
+  document.addEventListener("astro:page-load", () => {
     const tabs = document.querySelectorAll(".category-tab");
     const products = document.querySelectorAll(".product-card");
 

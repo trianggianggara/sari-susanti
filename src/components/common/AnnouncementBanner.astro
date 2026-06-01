@@ -46,48 +46,56 @@ const msg = messages[locale] ?? messages.id;
 </div>
 
 <script define:vars={{ BANNER_ID }}>
-  const banner = document.getElementById('announcement-banner');
-  const closeBtn = document.getElementById('banner-close');
-  const root = document.documentElement;
+  document.addEventListener('astro:page-load', () => {
+    const banner = document.getElementById('announcement-banner');
+    const closeBtn = document.getElementById('banner-close');
+    const root = document.documentElement;
 
-  function getBannerHeight() {
-    return banner ? banner.offsetHeight : 0;
-  }
-
-  function applyBannerHeight(px) {
-    root.style.setProperty('--banner-height', `${px}px`);
-  }
-
-  function dismissBanner() {
-    if (!banner) return;
-    banner.style.maxHeight = banner.offsetHeight + 'px';
-    banner.offsetHeight; // force reflow
-    banner.classList.add('is-dismissed');
-    setTimeout(() => {
-      banner.style.display = 'none';
-      applyBannerHeight(0);
-    }, 350);
-    localStorage.setItem(BANNER_ID, '1');
-  }
-
-  // Init: check if already dismissed
-  if (localStorage.getItem(BANNER_ID)) {
-    banner && (banner.style.display = 'none');
-    applyBannerHeight(0);
-  } else {
-    // Apply height after paint
-    requestAnimationFrame(() => {
-      applyBannerHeight(getBannerHeight());
-    });
-  }
-
-  closeBtn?.addEventListener('click', dismissBanner);
-
-  // Update on resize
-  window.addEventListener('resize', () => {
-    if (banner && banner.style.display !== 'none') {
-      applyBannerHeight(getBannerHeight());
+    function getBannerHeight() {
+      return banner ? banner.offsetHeight : 0;
     }
+
+    function applyBannerHeight(px) {
+      root.style.setProperty('--banner-height', `${px}px`);
+    }
+
+    function dismissBanner() {
+      if (!banner) return;
+      banner.style.maxHeight = banner.offsetHeight + 'px';
+      banner.offsetHeight; // force reflow
+      banner.classList.add('is-dismissed');
+      setTimeout(() => {
+        banner.style.display = 'none';
+        applyBannerHeight(0);
+      }, 350);
+      localStorage.setItem(BANNER_ID, '1');
+    }
+
+    // Init: check if already dismissed
+    if (localStorage.getItem(BANNER_ID)) {
+      banner && (banner.style.display = 'none');
+      applyBannerHeight(0);
+    } else {
+      // Apply height after paint
+      requestAnimationFrame(() => {
+        applyBannerHeight(getBannerHeight());
+      });
+    }
+
+    closeBtn?.addEventListener('click', dismissBanner);
+
+    // Update on resize
+    const handleResize = () => {
+      if (banner && banner.style.display !== 'none') {
+        applyBannerHeight(getBannerHeight());
+      }
+    };
+    window.addEventListener('resize', handleResize);
+
+    // Clean up on navigation to avoid multiple bound events
+    document.addEventListener('astro:before-preparation', () => {
+      window.removeEventListener('resize', handleResize);
+    }, { once: true });
   });
 </script>
 

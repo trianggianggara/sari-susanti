@@ -42,7 +42,7 @@ const t = useTranslations(locale);
 </section>
 
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('astro:page-load', () => {
     const triggers = document.querySelectorAll('.faq-trigger');
     
     triggers.forEach(trigger => {

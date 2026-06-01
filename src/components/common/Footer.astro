@@ -79,7 +79,7 @@ const navLinks = [
 
 <script>
   // Simple Scroll Reveal Animation for Footer
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('astro:page-load', () => {
     const footer = document.querySelector('.footer');
     if (footer) {
       const observer = new IntersectionObserver((entries) => {

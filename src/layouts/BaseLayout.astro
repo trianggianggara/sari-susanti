@@ -1,5 +1,6 @@
 ---
 import type { Locale } from '../i18n/utils';
+import { ClientRouter } from 'astro:transitions';
 import BaseHead from '../components/common/BaseHead.astro';
 import Navbar from '../components/common/Navbar.astro';
 import AnnouncementBanner from '../components/common/AnnouncementBanner.astro';
@@ -24,9 +25,11 @@ const { locale, title, description, image } = Astro.props;
 <html lang={locale}>
   <head>
     <BaseHead locale={locale} title={title} description={description} image={image} />
+    <ClientRouter />
     <style>
       :root { --banner-height: 0px; }
     </style>
+
   </head>
   <body>
     <AnnouncementBanner locale={locale} />
@@ -40,7 +43,7 @@ const { locale, title, description, image } = Astro.props;
 
     <script>
       // Initialize Scroll Reveal Observers
-      document.addEventListener('DOMContentLoaded', () => {
+      document.addEventListener('astro:page-load', () => {
         // Handle Skeleton Loading Images
         const skeletonImages = document.querySelectorAll('.skeleton-img-wrapper img');
         skeletonImages.forEach((img: any) => {

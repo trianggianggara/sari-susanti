@@ -1,7 +1,7 @@
 ---
 import type { Locale } from '../../i18n/utils';
 import { useTranslations } from '../../i18n/utils';
-import { BRAND } from '../../lib/constants';
+import { BRAND, WHATSAPP_NUMBER, SITE_URL } from '../../lib/constants';
 import '../../styles/global.css';
 
 export interface Props {
@@ -19,6 +19,61 @@ const defaultDescription = t('meta.home.desc');
 
 const finalTitle = title ? `${title} | ${BRAND.shortName}` : defaultTitle;
 const finalDescription = description || defaultDescription;
+
+// Schema.org Structured Data
+const schema = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "FoodEstablishment",
+      "@id": `${SITE_URL}/#establishment`,
+      "name": BRAND.name,
+      "image": new URL(image, Astro.url).toString(),
+      "description": defaultDescription, // Use site description for establishment
+      "url": SITE_URL,
+      "telephone": WHATSAPP_NUMBER,
+      "email": BRAND.email,
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Jl. H. Mugeni II No.27 10, RT.10/RW.4, Pisangan Tim., Kec. Pulo Gadung",
+        "addressLocality": "Kota Jakarta Timur",
+        "addressRegion": "Daerah Khusus Ibukota Jakarta",
+        "postalCode": "13230",
+        "addressCountry": "ID"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": -6.1965561,
+        "longitude": 106.883908
+      },
+      "servesCuisine": "Indonesian Catering, Jajanan Pasar",
+      "priceRange": "$$",
+      "sameAs": [
+        `https://instagram.com/${BRAND.instagram.replace('@', '')}`
+      ]
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${SITE_URL}/#website`,
+      "url": SITE_URL,
+      "name": BRAND.shortName,
+      "description": defaultDescription,
+      "publisher": {
+        "@id": `${SITE_URL}/#establishment`
+      }
+    },
+    {
+      "@type": "WebPage",
+      "@id": `${Astro.url.toString()}#webpage`,
+      "url": Astro.url.toString(),
+      "name": finalTitle,
+      "description": finalDescription,
+      "isPartOf": {
+        "@id": `${SITE_URL}/#website`
+      }
+    }
+  ]
+};
 ---
 
 <meta charset="utf-8" />
@@ -44,3 +99,6 @@ const finalDescription = description || defaultDescription;
 <meta property="twitter:title" content={finalTitle} />
 <meta property="twitter:description" content={finalDescription} />
 <meta property="twitter:image" content={new URL(image, Astro.url)} />
+
+<!-- Schema.org SEO JSON-LD -->
+<script type="application/ld+json" set:html={JSON.stringify(schema)} />

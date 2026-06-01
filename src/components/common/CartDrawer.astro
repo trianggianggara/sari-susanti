@@ -90,150 +90,191 @@ const isEn = locale === 'en';
 <script define:vars={{ waNumber: WHATSAPP_NUMBER, locale }}>
   import('/src/lib/cart-store.ts').catch(() => {});
 
-  // We inline the cart logic here since this is a static-ish component
-  const CART_KEY = 'ss_cart';
-  const CART_EVENT = 'ss:cart-updated';
+  document.addEventListener('astro:page-load', () => {
+    // We inline the cart logic here since this is a static-ish component
+    const CART_KEY = 'ss_cart';
+    const CART_EVENT = 'ss:cart-updated';
 
-  function getItems() {
-    try { return JSON.parse(localStorage.getItem(CART_KEY) || '[]'); } catch { return []; }
-  }
-  function saveItems(items) {
-    localStorage.setItem(CART_KEY, JSON.stringify(items));
-    window.dispatchEvent(new CustomEvent(CART_EVENT, { detail: items }));
-  }
-
-  // ── DOM refs ──────────────────────────────────────────────────
-  const overlay   = document.getElementById('cart-overlay');
-  const drawer    = document.getElementById('cart-drawer');
-  const closeBtn  = document.getElementById('cart-close');
-  const fab       = document.getElementById('cart-fab');
-  const fabCount  = document.getElementById('cart-fab-count');
-  const drawerBadge = document.getElementById('cart-badge-drawer');
-  const emptyEl   = document.getElementById('cart-empty');
-  const itemsEl   = document.getElementById('cart-items');
-  const footerEl  = document.getElementById('cart-footer');
-  const totalCount = document.getElementById('cart-total-count');
-  const waBtn     = document.getElementById('cart-whatsapp-btn');
-  const clearBtn  = document.getElementById('cart-clear-btn');
-
-  const isEn = locale === 'en';
-
-  // ── Open / Close ──────────────────────────────────────────────
-  function openCart() {
-    drawer?.classList.add('is-open');
-    overlay?.classList.add('is-visible');
-    document.body.style.overflow = 'hidden';
-    drawer?.focus();
-  }
-  function closeCart() {
-    drawer?.classList.remove('is-open');
-    overlay?.classList.remove('is-visible');
-    document.body.style.overflow = '';
-  }
-
-  fab?.addEventListener('click', openCart);
-  closeBtn?.addEventListener('click', closeCart);
-  overlay?.addEventListener('click', closeCart);
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCart(); });
-
-  // Listen for open-cart events from Add-to-Cart buttons
-  window.addEventListener('ss:open-cart', openCart);
-
-  // ── Render ────────────────────────────────────────────────────
-  function renderCartItem(item) {
-    const div = document.createElement('div');
-    div.className = 'cart-item';
-    div.dataset.slug = item.slug;
-    div.innerHTML = `
-      <img class="cart-item__img" src="${item.image || '/placeholder.jpg'}" alt="${item.name}" />
-      <div class="cart-item__info">
-        <span class="cart-item__name">${item.name}</span>
-        ${item.price ? `<span class="cart-item__price">${isEn ? 'From' : 'Mulai'} Rp ${Number(item.price).toLocaleString('id-ID')}</span>` : ''}
-      </div>
-      <div class="cart-item__controls">
-        <button class="cart-qty-btn" data-action="dec" data-slug="${item.slug}" aria-label="Kurangi">−</button>
-        <span class="cart-qty-val">${item.qty}</span>
-        <button class="cart-qty-btn" data-action="inc" data-slug="${item.slug}" aria-label="Tambah">+</button>
-        <button class="cart-remove" data-slug="${item.slug}" aria-label="${isEn ? 'Remove' : 'Hapus'}">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-    `;
-    return div;
-  }
-
-  function buildWaUrl(items) {
-    if (!items.length) return `https://wa.me/${waNumber}`;
-    let msg = isEn
-      ? "Hello Sari Susanti! I'd like to order:\n\n"
-      : 'Halo Sari Susanti! Saya ingin memesan:\n\n';
-    items.forEach((item, i) => { msg += `${i+1}. *${item.name}* × ${item.qty}\n`; });
-    msg += isEn
-      ? '\nPlease let me know availability and pricing. Thank you 🙏'
-      : '\nMohon informasi ketersediaan dan harganya. Terima kasih 🙏';
-    return `https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`;
-  }
-
-  function renderCart(items) {
-    const count = items.reduce((s, i) => s + i.qty, 0);
-
-    // Update badges
-    if (fabCount) fabCount.textContent = String(count);
-    if (drawerBadge) drawerBadge.textContent = String(count);
-    if (totalCount) totalCount.textContent = `${count} ${isEn ? (count === 1 ? 'item' : 'items') : 'item'}`;
-
-    // FAB visibility
-    if (fab) fab.style.display = count > 0 ? 'flex' : 'none';
-
-    // Empty vs filled
-    const isEmpty = items.length === 0;
-    if (emptyEl) emptyEl.style.display = isEmpty ? 'flex' : 'none';
-    if (itemsEl) itemsEl.style.display = isEmpty ? 'none' : 'block';
-    if (footerEl) footerEl.style.display = isEmpty ? 'none' : 'flex';
-
-    // Render items
-    if (itemsEl) {
-      itemsEl.innerHTML = '';
-      items.forEach(item => itemsEl.appendChild(renderCartItem(item)));
+    function getItems() {
+      try { return JSON.parse(localStorage.getItem(CART_KEY) || '[]'); } catch { return []; }
+    }
+    function saveItems(items) {
+      localStorage.setItem(CART_KEY, JSON.stringify(items));
+      window.dispatchEvent(new CustomEvent(CART_EVENT, { detail: items }));
     }
 
-    // WA link
-    if (waBtn) waBtn.href = buildWaUrl(items);
-  }
+    // ── DOM refs ──────────────────────────────────────────────────
+    const overlay   = document.getElementById('cart-overlay');
+    const drawer    = document.getElementById('cart-drawer');
+    const closeBtn  = document.getElementById('cart-close');
+    const fab       = document.getElementById('cart-fab');
+    const fabCount  = document.getElementById('cart-fab-count');
+    const drawerBadge = document.getElementById('cart-badge-drawer');
+    const emptyEl   = document.getElementById('cart-empty');
+    const itemsEl   = document.getElementById('cart-items');
+    const footerEl  = document.getElementById('cart-footer');
+    const totalCount = document.getElementById('cart-total-count');
+    const waBtn     = document.getElementById('cart-whatsapp-btn');
+    const clearBtn  = document.getElementById('cart-clear-btn');
 
-  // ── Event delegation for qty/remove ──────────────────────────
-  itemsEl?.addEventListener('click', (e) => {
-    const target = e.target;
-    const btn = target.closest('[data-action],[data-slug]');
-    if (!btn) return;
+    const isEn = locale === 'en';
 
-    const slug = btn.dataset.slug;
-    const action = btn.dataset.action;
-    const items = getItems();
-    const item = items.find(i => i.slug === slug);
-    if (!item) return;
+    // ── Open / Close ──────────────────────────────────────────────
+    function openCart() {
+      drawer?.classList.add('is-open');
+      overlay?.classList.add('is-visible');
+      document.body.style.overflow = 'hidden';
+      drawer?.focus();
+    }
+    function closeCart() {
+      drawer?.classList.remove('is-open');
+      overlay?.classList.remove('is-visible');
+      document.body.style.overflow = '';
+    }
 
-    if (action === 'inc') {
-      item.qty += 1;
-      saveItems(items);
-    } else if (action === 'dec') {
-      item.qty -= 1;
-      if (item.qty <= 0) saveItems(items.filter(i => i.slug !== slug));
-      else saveItems(items);
-    } else if (btn.classList.contains('cart-remove')) {
-      saveItems(items.filter(i => i.slug !== slug));
+    fab?.addEventListener('click', openCart);
+    closeBtn?.addEventListener('click', closeCart);
+    overlay?.addEventListener('click', closeCart);
+    
+    // Use an object to track if we've bound global events
+    window.__ssCartInit = window.__ssCartInit || {};
+
+    if (!window.__ssCartInit.keydown) {
+      document.addEventListener('keydown', (e) => { 
+        if (e.key === 'Escape') {
+          const activeDrawer = document.getElementById('cart-drawer');
+          if (activeDrawer?.classList.contains('is-open')) {
+            activeDrawer.classList.remove('is-open');
+            const activeOverlay = document.getElementById('cart-overlay');
+            activeOverlay?.classList.remove('is-visible');
+            document.body.style.overflow = '';
+          }
+        }
+      });
+      window.__ssCartInit.keydown = true;
+    }
+
+    // Listen for open-cart events from Add-to-Cart buttons
+    if (!window.__ssCartInit.openCart) {
+      window.addEventListener('ss:open-cart', () => {
+        const d = document.getElementById('cart-drawer');
+        const o = document.getElementById('cart-overlay');
+        d?.classList.add('is-open');
+        o?.classList.add('is-visible');
+        document.body.style.overflow = 'hidden';
+      });
+      window.__ssCartInit.openCart = true;
+    }
+
+    // ── Render ────────────────────────────────────────────────────
+    function renderCartItem(item) {
+      const div = document.createElement('div');
+      div.className = 'cart-item';
+      div.dataset.slug = item.slug;
+      div.innerHTML = `
+        <img class="cart-item__img" src="${item.image || '/placeholder.jpg'}" alt="${item.name}" />
+        <div class="cart-item__info">
+          <span class="cart-item__name">${item.name}</span>
+          ${item.price ? `<span class="cart-item__price">${isEn ? 'From' : 'Mulai'} Rp ${Number(item.price).toLocaleString('id-ID')}</span>` : ''}
+        </div>
+        <div class="cart-item__controls">
+          <button class="cart-qty-btn" data-action="dec" data-slug="${item.slug}" aria-label="Kurangi">−</button>
+          <span class="cart-qty-val">${item.qty}</span>
+          <button class="cart-qty-btn" data-action="inc" data-slug="${item.slug}" aria-label="Tambah">+</button>
+          <button class="cart-remove" data-slug="${item.slug}" aria-label="${isEn ? 'Remove' : 'Hapus'}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      `;
+      return div;
+    }
+
+    function buildWaUrl(items) {
+      if (!items.length) return `https://wa.me/${waNumber}`;
+      let msg = isEn
+        ? "Hello Sari Susanti! I'd like to order:\n\n"
+        : 'Halo Sari Susanti! Saya ingin memesan:\n\n';
+      items.forEach((item, i) => { msg += `${i+1}. *${item.name}* × ${item.qty}\n`; });
+      msg += isEn
+        ? '\nPlease let me know availability and pricing. Thank you 🙏'
+        : '\nMohon informasi ketersediaan dan harganya. Terima kasih 🙏';
+      return `https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`;
+    }
+
+    function renderCart(items) {
+      const count = items.reduce((s, i) => s + i.qty, 0);
+      
+      const fabEl = document.getElementById('cart-fab');
+      const fabCountEl = document.getElementById('cart-fab-count');
+      const drawerBadgeEl = document.getElementById('cart-badge-drawer');
+      const emptyStateEl = document.getElementById('cart-empty');
+      const itemsContainer = document.getElementById('cart-items');
+      const footerContainer = document.getElementById('cart-footer');
+      const totalCountEl = document.getElementById('cart-total-count');
+      const waBtnEl = document.getElementById('cart-whatsapp-btn');
+
+      // Update badges
+      if (fabCountEl) fabCountEl.textContent = String(count);
+      if (drawerBadgeEl) drawerBadgeEl.textContent = String(count);
+      if (totalCountEl) totalCountEl.textContent = `${count} ${isEn ? (count === 1 ? 'item' : 'items') : 'item'}`;
+
+      // FAB visibility
+      if (fabEl) fabEl.style.display = count > 0 ? 'flex' : 'none';
+
+      // Empty vs filled
+      const isEmpty = items.length === 0;
+      if (emptyStateEl) emptyStateEl.style.display = isEmpty ? 'flex' : 'none';
+      if (itemsContainer) itemsContainer.style.display = isEmpty ? 'none' : 'block';
+      if (footerContainer) footerContainer.style.display = isEmpty ? 'none' : 'flex';
+
+      // Render items
+      if (itemsContainer) {
+        itemsContainer.innerHTML = '';
+        items.forEach(item => itemsContainer.appendChild(renderCartItem(item)));
+      }
+
+      // WA link
+      if (waBtnEl) waBtnEl.href = buildWaUrl(items);
+    }
+
+    // ── Event delegation for qty/remove ──────────────────────────
+    itemsEl?.addEventListener('click', (e) => {
+      const target = e.target;
+      const btn = target.closest('[data-action],[data-slug]');
+      if (!btn) return;
+
+      const slug = btn.dataset.slug;
+      const action = btn.dataset.action;
+      const items = getItems();
+      const item = items.find(i => i.slug === slug);
+      if (!item) return;
+
+      if (action === 'inc') {
+        item.qty += 1;
+        saveItems(items);
+      } else if (action === 'dec') {
+        item.qty -= 1;
+        if (item.qty <= 0) saveItems(items.filter(i => i.slug !== slug));
+        else saveItems(items);
+      } else if (btn.classList.contains('cart-remove')) {
+        saveItems(items.filter(i => i.slug !== slug));
+      }
+    });
+
+    clearBtn?.addEventListener('click', () => {
+      if (confirm(isEn ? 'Clear all items?' : 'Kosongkan semua pesanan?')) {
+        saveItems([]);
+      }
+    });
+
+    // ── Init & reactive updates ───────────────────────────────────
+    renderCart(getItems());
+    
+    if (!window.__ssCartInit.cartEvent) {
+      window.addEventListener(CART_EVENT, (e) => renderCart(e.detail));
+      window.__ssCartInit.cartEvent = true;
     }
   });
-
-  clearBtn?.addEventListener('click', () => {
-    if (confirm(isEn ? 'Clear all items?' : 'Kosongkan semua pesanan?')) {
-      saveItems([]);
-    }
-  });
-
-  // ── Init & reactive updates ───────────────────────────────────
-  renderCart(getItems());
-  window.addEventListener(CART_EVENT, (e) => renderCart(e.detail));
 </script>
 
 <style>
