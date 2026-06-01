@@ -1,0 +1,167 @@
+---
+import type { Locale } from '../../i18n/utils';
+
+export interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+
+// ── Banner config — edit here to change message ──────────────
+const BANNER_VERSION = 'v1'; // Bump this to re-show banner after dismissal
+const BANNER_ID      = `ss-banner-dismissed-${BANNER_VERSION}`;
+
+const messages = {
+  id: {
+    text: '🎉 Min. order 10 porsi · Pesan minimal H-3 sebelum acara',
+    cta: 'Pesan Sekarang',
+    href: '/order',
+  },
+  en: {
+    text: '🎉 Min. 10 portions per item · Order at least 3 days in advance',
+    cta: 'Order Now',
+    href: '/en/order',
+  },
+};
+
+const msg = messages[locale] ?? messages.id;
+---
+
+<div class="announcement-banner" id="announcement-banner" role="banner" aria-label="Announcement">
+  <div class="announcement-banner__inner container">
+    <span class="announcement-banner__text">{msg.text}</span>
+    <a href={msg.href} class="announcement-banner__cta">{msg.cta} →</a>
+  </div>
+  <button
+    class="announcement-banner__close"
+    id="banner-close"
+    aria-label="Dismiss announcement"
+    title="Dismiss"
+  >
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+      <line x1="18" y1="6" x2="6" y2="18"></line>
+      <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+  </button>
+</div>
+
+<script define:vars={{ BANNER_ID }}>
+  const banner = document.getElementById('announcement-banner');
+  const closeBtn = document.getElementById('banner-close');
+  const root = document.documentElement;
+
+  function getBannerHeight() {
+    return banner ? banner.offsetHeight : 0;
+  }
+
+  function applyBannerHeight(px) {
+    root.style.setProperty('--banner-height', `${px}px`);
+  }
+
+  function dismissBanner() {
+    if (!banner) return;
+    banner.style.maxHeight = banner.offsetHeight + 'px';
+    banner.offsetHeight; // force reflow
+    banner.classList.add('is-dismissed');
+    setTimeout(() => {
+      banner.style.display = 'none';
+      applyBannerHeight(0);
+    }, 350);
+    localStorage.setItem(BANNER_ID, '1');
+  }
+
+  // Init: check if already dismissed
+  if (localStorage.getItem(BANNER_ID)) {
+    banner && (banner.style.display = 'none');
+    applyBannerHeight(0);
+  } else {
+    // Apply height after paint
+    requestAnimationFrame(() => {
+      applyBannerHeight(getBannerHeight());
+    });
+  }
+
+  closeBtn?.addEventListener('click', dismissBanner);
+
+  // Update on resize
+  window.addEventListener('resize', () => {
+    if (banner && banner.style.display !== 'none') {
+      applyBannerHeight(getBannerHeight());
+    }
+  });
+</script>
+
+<style>
+.announcement-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: calc(var(--z-sticky) + 10);
+  background: linear-gradient(90deg, var(--color-emerald-dark) 0%, var(--color-emerald) 60%, var(--color-emerald-dark) 100%);
+  color: var(--color-ivory);
+  font-size: 12px;
+  font-family: var(--font-body);
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  overflow: hidden;
+  max-height: 60px;
+  transition: max-height 0.35s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.3s ease;
+}
+
+.announcement-banner.is-dismissed {
+  max-height: 0 !important;
+  opacity: 0;
+}
+
+.announcement-banner__inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: 9px var(--space-10) 9px var(--space-4);
+  text-align: center;
+  flex-wrap: wrap;
+}
+
+.announcement-banner__text {
+  color: rgba(253, 251, 247, 0.9);
+  line-height: 1.4;
+}
+
+.announcement-banner__cta {
+  color: var(--color-gold-light);
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  letter-spacing: 0.05em;
+  transition: color 0.2s ease;
+}
+
+.announcement-banner__cta:hover {
+  color: var(--color-gold);
+  text-decoration: underline;
+}
+
+.announcement-banner__close {
+  position: absolute;
+  right: var(--space-4);
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: rgba(253, 251, 247, 0.6);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+.announcement-banner__close:hover {
+  color: var(--color-ivory);
+  background: rgba(255,255,255,0.1);
+}
+</style>

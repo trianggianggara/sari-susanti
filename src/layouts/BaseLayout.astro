@@ -2,6 +2,7 @@
 import type { Locale } from '../i18n/utils';
 import BaseHead from '../components/common/BaseHead.astro';
 import Navbar from '../components/common/Navbar.astro';
+import AnnouncementBanner from '../components/common/AnnouncementBanner.astro';
 import Footer from '../components/common/Footer.astro';
 import WhatsAppButton from '../components/common/WhatsAppButton.astro';
 import CartDrawer from '../components/common/CartDrawer.astro';
@@ -23,10 +24,14 @@ const { locale, title, description, image } = Astro.props;
 <html lang={locale}>
   <head>
     <BaseHead locale={locale} title={title} description={description} image={image} />
+    <style>
+      :root { --banner-height: 0px; }
+    </style>
   </head>
   <body>
+    <AnnouncementBanner locale={locale} />
     <Navbar locale={locale} />
-    <main id="main-content" style="padding-top: var(--nav-height);">
+    <main id="main-content" style="padding-top: calc(var(--nav-height) + var(--banner-height));">
       <slot />
     </main>
     <Footer locale={locale} />
