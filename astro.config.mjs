@@ -9,7 +9,7 @@ import tailwind from '@astrojs/tailwind';
 // https://astro.build/config
 export default defineConfig({
   site: 'https://sarisusanti.id',
-  output: 'static',
+  output: 'server',
   server: { port: 3000 },
   adapter: vercel(),
   integrations: [
