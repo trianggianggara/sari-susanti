@@ -5,71 +5,415 @@ export const prerender = false;
 
 const { supabase } = Astro.locals;
 
-// Fetch some basic stats
-const { count: productsCount } = await supabase.from('products').select('*', { count: 'exact', head: true });
-const { count: categoriesCount } = await supabase.from('categories').select('*', { count: 'exact', head: true });
-const { count: testimonialsCount } = await supabase.from('testimonials').select('*', { count: 'exact', head: true });
+const [
+  { count: productsCount },
+  { count: categoriesCount },
+  { count: testimonialsCount },
+] = await Promise.all([
+  supabase.from('products').select('*', { count: 'exact', head: true }),
+  supabase.from('categories').select('*', { count: 'exact', head: true }),
+  supabase.from('testimonials').select('*', { count: 'exact', head: true }),
+]);
 
 const stats = [
-  { label: 'Total Produk', value: productsCount || 0, color: 'var(--color-emerald)' },
-  { label: 'Kategori Menu', value: categoriesCount || 0, color: 'var(--color-gold)' },
-  { label: 'Ulasan Pelanggan', value: testimonialsCount || 0, color: 'var(--color-emerald-light)' },
-];
+  {
+    label:   'Total Produk',
+    value:   productsCount  ?? 0,
+    icon:    '🛍️',
+    accent:  'var(--color-emerald)',
+    delay:   '0ms',
+    href:    '/admin/products',
+  },
+  {
+    label:   'Kategori Menu',
+    value:   categoriesCount ?? 0,
+    icon:    '📋',
+    accent:  'var(--color-gold)',
+    delay:   '80ms',
+    href:    '/admin/categories',
+  },
+  {
+    label:   'Ulasan Pelanggan',
+    value:   testimonialsCount ?? 0,
+    icon:    '⭐',
+    accent:  'var(--color-emerald-light)',
+    delay:   '160ms',
+    href:    '/admin/testimonials',
+  },
+] as const;
+
+const quickActions = [
+  {
+    href:  '/admin/products/new',
+    icon:  '✨',
+    title: 'Tambah Produk Baru',
+    desc:  'Perbarui etalase menu katering Anda.',
+    delay: '240ms',
+  },
+  {
+    href:  '/admin/testimonials/new',
+    icon:  '🌟',
+    title: 'Tambah Testimoni',
+    desc:  'Bagikan kepuasan pelanggan terbaru.',
+    delay: '300ms',
+  },
+  {
+    href:  '/admin/banners/new',
+    icon:  '🖼️',
+    title: 'Tambah Banner',
+    desc:  'Perbarui gambar promosi di halaman utama.',
+    delay: '360ms',
+  },
+  {
+    href:  '/admin/faqs/new',
+    icon:  '❓',
+    title: 'Tambah FAQ',
+    desc:  'Tambahkan pertanyaan yang sering ditanyakan.',
+    delay: '420ms',
+  },
+] as const;
 ---
 
 <AdminLayout title="Dashboard">
-  <div class="relative p-4 isolate">
-    
-    <header class="relative bg-emerald-dark text-white px-8 py-10 rounded-lg overflow-hidden mb-10 shadow-brand-xl animate-[slideUpFade_0.8s_ease-out_forwards] opacity-0">
-      <div class="relative z-10 max-w-[600px]">
-        <p class="text-gold font-body uppercase tracking-widest text-xs font-semibold mb-3">Sari Susanti Catering & Bakery</p>
-        <h1 class="text-ivory font-display text-4xl leading-tight mb-4">Selamat Datang, Admin</h1>
-        <p class="text-sand text-base leading-relaxed">Kelola sajian kuliner Nusantara dan pantau aktivitas website Anda melalui panel kontrol eksklusif ini.</p>
+  <div class="dash-wrapper">
+
+    <!-- Hero header -->
+    <header class="dash-hero" style="animation-delay: 0ms">
+      <div class="dash-hero__body">
+        <p class="dash-hero__eyebrow">Sari Susanti Catering &amp; Bakery</p>
+        <h1 class="dash-hero__heading">Selamat Datang,<br/>Admin</h1>
+        <p class="dash-hero__sub">Kelola sajian kuliner Nusantara dan pantau aktivitas website Anda.</p>
       </div>
-      <div class="absolute -right-[5%] -bottom-[20%] w-[300px] h-[300px] bg-[radial-gradient(circle,var(--color-emerald-light)_0%,transparent_70%)] opacity-40 rounded-full z-0 blur-[40px]"></div>
+      <div class="dash-hero__glow" aria-hidden="true"></div>
+      <div class="dash-hero__dots" aria-hidden="true"></div>
     </header>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-      {stats.map((stat, index) => (
-        <div class="relative bg-white p-8 rounded-lg shadow-brand-md border border-sand overflow-hidden flex items-center transition-transform transition-shadow duration-250 ease-out hover:-translate-y-1 hover:shadow-brand-xl animate-[slideUpFade_0.8s_ease-out_forwards] opacity-0" style={`animation-delay: ${index * 150}ms`}>
-          <div class="absolute top-0 left-0 bottom-0 w-[6px]" style={`background-color: ${stat.color}`}></div>
-          <div class="relative z-10">
-            <h3 class="m-0 text-stone font-body text-sm uppercase tracking-wide font-semibold">{stat.label}</h3>
-            <p class="mt-2 font-display text-5xl text-emerald-dark leading-none">{stat.value}</p>
+    <!-- Stat cards -->
+    <section class="dash-stats" aria-label="Statistik konten">
+      {stats.map((stat) => (
+        <a href={stat.href} class="dash-stat-card" style={`--accent: ${stat.accent}; animation-delay: ${stat.delay}`}>
+          <div class="dash-stat-card__accent-bar"></div>
+          <span class="dash-stat-card__icon" aria-hidden="true">{stat.icon}</span>
+          <div class="dash-stat-card__body">
+            <p class="dash-stat-card__label">{stat.label}</p>
+            <p class="dash-stat-card__value" data-count-up>{stat.value}</p>
           </div>
-          <div class="absolute -right-2 -bottom-5 font-display text-[8rem] font-bold text-sand-light opacity-30 z-0 pointer-events-none leading-none">{stat.value}</div>
-        </div>
+          <div class="dash-stat-card__bg-num" aria-hidden="true">{stat.value}</div>
+        </a>
       ))}
-    </div>
+    </section>
 
-    <section class="animate-[slideUpFade_0.8s_ease-out_forwards] opacity-0" style="animation-delay: 450ms">
-      <h2 class="font-display text-emerald-dark text-2xl mb-6 relative inline-block after:content-[''] after:absolute after:-bottom-2 after:left-0 after:w-10 after:h-0.5 after:bg-gold">Aksi Cepat</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <a href="/admin/products/new" class="flex items-start gap-4 bg-white p-6 rounded-md border border-sand no-underline transition-all duration-150 ease-out hover:bg-ivory-warm hover:border-gold hover:shadow-brand-md group">
-          <div class="text-2xl bg-ivory-warm w-12 h-12 flex items-center justify-center rounded-full transition-colors duration-150 group-hover:bg-emerald-glass2">✨</div>
-          <div>
-            <h3 class="m-0 mb-1 text-emerald-dark text-lg font-display">Tambah Produk Baru</h3>
-            <p class="m-0 text-stone text-sm">Perbarui etalase menu katering Anda.</p>
-          </div>
-        </a>
-        <a href="/admin/testimonials/new" class="flex items-start gap-4 bg-white p-6 rounded-md border border-sand no-underline transition-all duration-150 ease-out hover:bg-ivory-warm hover:border-gold hover:shadow-brand-md group">
-          <div class="text-2xl bg-ivory-warm w-12 h-12 flex items-center justify-center rounded-full transition-colors duration-150 group-hover:bg-emerald-glass2">🌟</div>
-          <div>
-            <h3 class="m-0 mb-1 text-emerald-dark text-lg font-display">Tambah Testimoni</h3>
-            <p class="m-0 text-stone text-sm">Bagikan kepuasan pelanggan terbaru.</p>
-          </div>
-        </a>
+    <!-- Quick actions -->
+    <section class="dash-actions" aria-labelledby="quick-actions-heading">
+      <h2 id="quick-actions-heading" class="dash-section-title" style="animation-delay: 200ms">
+        Aksi Cepat
+      </h2>
+      <div class="dash-actions__grid">
+        {quickActions.map((action) => (
+          <a href={action.href} class="dash-action-card" style={`animation-delay: ${action.delay}`}>
+            <span class="dash-action-card__icon" aria-hidden="true">{action.icon}</span>
+            <div>
+              <h3 class="dash-action-card__title">{action.title}</h3>
+              <p class="dash-action-card__desc">{action.desc}</p>
+            </div>
+            <svg class="dash-action-card__arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </a>
+        ))}
       </div>
     </section>
 
   </div>
 </AdminLayout>
 
+<script>
+  import { showToast, checkUrlParams } from '@/lib/admin-toast';
+
+  checkUrlParams();
+
+  // Count-up animation for stat values
+  document.querySelectorAll<HTMLElement>('[data-count-up]').forEach((el) => {
+    const target = parseInt(el.textContent ?? '0', 10);
+    if (isNaN(target) || target === 0) return;
+
+    el.textContent = '0';
+    const duration = 1000;
+    const start    = performance.now();
+
+    function step(now: number): void {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased    = 1 - Math.pow(1 - progress, 3); // ease-out-cubic
+      el.textContent = Math.round(eased * target).toString();
+      if (progress < 1) requestAnimationFrame(step);
+    }
+
+    const obs = new IntersectionObserver((entries) => {
+      if (entries[0]?.isIntersecting) {
+        requestAnimationFrame(step);
+        obs.disconnect();
+      }
+    }, { threshold: 0.4 });
+    obs.observe(el);
+  });
+</script>
+
 <style>
-  /* Animations can still use Tailwind's arbitrary values, but keeping the keyframes here is cleaner for complex ones if needed. 
-     Tailwind v3 arbitrary variants take care of it nicely: animate-[slideUpFade_0.8s_ease-out_forwards] */
-  @keyframes slideUpFade {
-    0% { opacity: 0; transform: translateY(30px); }
-    100% { opacity: 1; transform: translateY(0); }
+  @keyframes dashIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .dash-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    max-width: 1100px;
+  }
+
+  /* ── Hero ── */
+  .dash-hero {
+    position: relative;
+    background: var(--color-emerald-dark);
+    color: var(--color-white);
+    border-radius: 1rem;
+    padding: 2.5rem 3rem;
+    overflow: hidden;
+    animation: dashIn 0.6s var(--ease-smooth) both;
+  }
+
+  .dash-hero__body {
+    position: relative;
+    z-index: 2;
+    max-width: 520px;
+  }
+
+  .dash-hero__eyebrow {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-gold);
+    margin: 0 0 0.75rem;
+    max-width: none;
+  }
+
+  .dash-hero__heading {
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 3vw, 2.5rem);
+    font-weight: 600;
+    color: var(--color-ivory);
+    line-height: 1.15;
+    margin: 0 0 0.75rem;
+  }
+
+  .dash-hero__sub {
+    font-size: 0.95rem;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.65;
+    margin: 0;
+    max-width: 52ch;
+  }
+
+  .dash-hero__glow {
+    position: absolute;
+    right: -5%;
+    top: -30%;
+    width: 340px;
+    height: 340px;
+    background: radial-gradient(circle, var(--color-emerald-light) 0%, transparent 70%);
+    opacity: 0.3;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(40px);
+  }
+
+  .dash-hero__dots {
+    position: absolute;
+    right: 2.5rem;
+    bottom: 1.5rem;
+    width: 160px;
+    height: 100px;
+    background-image: radial-gradient(rgba(212, 175, 55, 0.25) 1.5px, transparent 1.5px);
+    background-size: 18px 18px;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.6;
+  }
+
+  /* ── Stats ── */
+  .dash-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+
+  .dash-stat-card {
+    position: relative;
+    background: var(--color-white);
+    border-radius: 0.875rem;
+    padding: 1.5rem 1.5rem 1.5rem 1.75rem;
+    border: 1px solid var(--color-sand);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    text-decoration: none;
+    overflow: hidden;
+    animation: dashIn 0.55s var(--ease-spring) both;
+    transition: box-shadow 200ms var(--ease-out), transform 200ms var(--ease-out);
+  }
+
+  .dash-stat-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-3px);
+  }
+
+  .dash-stat-card__accent-bar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    background: var(--accent);
+    border-radius: var(--radius-full) 0 0 var(--radius-full);
+  }
+
+  .dash-stat-card__icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  .dash-stat-card__body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .dash-stat-card__label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-stone);
+    margin: 0 0 0.25rem;
+    max-width: none;
+  }
+
+  .dash-stat-card__value {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--color-emerald-dark);
+    line-height: 1;
+    margin: 0;
+    max-width: none;
+  }
+
+  .dash-stat-card__bg-num {
+    position: absolute;
+    right: -0.25rem;
+    bottom: -0.5rem;
+    font-family: var(--font-display);
+    font-size: 6rem;
+    font-weight: 900;
+    color: var(--color-sand-light);
+    opacity: 0.5;
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* ── Section heading ── */
+  .dash-section-title {
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    color: var(--color-emerald-dark);
+    margin: 0 0 1rem;
+    position: relative;
+    display: inline-block;
+    animation: dashIn 0.5s var(--ease-smooth) both;
+  }
+
+  .dash-section-title::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 0;
+    width: 2rem;
+    height: 2.5px;
+    background: var(--color-gold);
+    border-radius: var(--radius-full);
+  }
+
+  /* ── Quick actions ── */
+  .dash-actions__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 0.875rem;
+  }
+
+  .dash-action-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--color-white);
+    border: 1.5px solid var(--color-sand);
+    border-radius: 0.75rem;
+    padding: 1.1rem 1.25rem;
+    text-decoration: none;
+    animation: dashIn 0.55s var(--ease-spring) both;
+    transition: all 150ms var(--ease-out);
+  }
+
+  .dash-action-card:hover {
+    border-color: var(--color-gold-light);
+    background: var(--color-ivory-warm);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
+
+  .dash-action-card__icon {
+    width: 44px;
+    height: 44px;
+    background: var(--color-ivory-warm);
+    border-radius: 0.625rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+    transition: background 150ms var(--ease-out);
+  }
+
+  .dash-action-card:hover .dash-action-card__icon {
+    background: var(--color-emerald-glass2);
+  }
+
+  .dash-action-card__title {
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    color: var(--color-emerald-dark);
+    margin: 0 0 0.15rem;
+  }
+
+  .dash-action-card__desc {
+    font-size: 0.8rem;
+    color: var(--color-stone);
+    margin: 0;
+    max-width: none;
+    line-height: 1.5;
+  }
+
+  .dash-action-card__arrow {
+    flex-shrink: 0;
+    margin-left: auto;
+    color: var(--color-stone-light);
+    transition: transform 150ms var(--ease-out), color 150ms;
+  }
+
+  .dash-action-card:hover .dash-action-card__arrow {
+    transform: translateX(4px);
+    color: var(--color-emerald);
   }
 </style>

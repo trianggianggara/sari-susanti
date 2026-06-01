@@ -12,23 +12,144 @@ const { title } = Astro.props;
 <!doctype html>
 <html lang="id">
   <head>
-    <BaseHead locale="id" title={`${title} - Admin CMS Sari Susanti`} description="Admin CMS" />
+    <BaseHead locale="id" title={`${title} — Admin · Sari Susanti`} description="Admin CMS Sari Susanti" />
+  </head>
+
   <body class="bg-ivory-warm m-0 font-body text-charcoal">
     <div class="flex min-h-screen">
+
+      <!-- Sidebar -->
       <AdminSidebar client:load currentPath={Astro.url.pathname} />
-      <div class="flex-1 flex flex-col bg-ivory-warm">
-        <header class="bg-white px-8 py-4 border-b border-sand flex justify-between items-center shadow-brand-sm z-50">
-          <h2 class="m-0 font-display text-emerald-dark text-2xl">{title}</h2>
-          <div>
-            <form action="/api/auth/logout" method="POST">
-              <button type="submit" class="bg-transparent border-none text-red-600 cursor-pointer font-body font-semibold text-sm transition-opacity duration-150 ease-out hover:opacity-70">Logout</button>
-            </form>
+
+      <!-- Main column -->
+      <div class="flex-1 flex flex-col bg-ivory-warm min-w-0">
+
+        <!-- Top header -->
+        <header class="admin-topbar">
+          <div class="admin-topbar__title">
+            <div class="admin-topbar__breadcrumb" aria-label="Halaman saat ini">
+              <span class="admin-topbar__page">{title}</span>
+            </div>
+          </div>
+
+          <div class="admin-topbar__actions">
+            <!-- Logout button triggers confirm dialog -->
+            <button
+              id="logout-trigger"
+              type="button"
+              class="admin-topbar__logout"
+              aria-label="Keluar dari akun admin"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
+              Logout
+            </button>
+            <!-- Hidden logout form submitted programmatically after confirm -->
+            <form id="logout-form" action="/api/auth/logout" method="POST" class="hidden"></form>
           </div>
         </header>
-        <main class="p-8 flex-1 overflow-y-auto">
+
+        <!-- Page content -->
+        <main class="p-6 md:p-8 flex-1 overflow-y-auto">
           <slot />
         </main>
+
       </div>
     </div>
   </body>
 </html>
+
+<script>
+  import { showToast, checkUrlParams } from '@/lib/admin-toast';
+  import { showConfirmDialog } from '@/lib/admin-dialog';
+
+  // Show success/error toasts from server redirect query params
+  checkUrlParams();
+
+  // Logout with confirmation
+  const logoutTrigger = document.getElementById('logout-trigger');
+  const logoutForm    = document.getElementById('logout-form') as HTMLFormElement | null;
+
+  logoutTrigger?.addEventListener('click', async () => {
+    const confirmed = await showConfirmDialog(
+      'Yakin ingin keluar dari panel admin?',
+      { title: 'Logout', confirmLabel: 'Ya, Logout' },
+    );
+    if (confirmed) {
+      logoutForm?.submit();
+    }
+  });
+</script>
+
+<style>
+  /* ── Admin Top Bar ─────────────────────────────────────────── */
+  .admin-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    height: 64px;
+    background: rgba(253, 251, 247, 0.88);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--color-sand);
+    box-shadow: 0 1px 8px rgba(44, 44, 44, 0.06);
+    flex-shrink: 0;
+  }
+
+  .admin-topbar__title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .admin-topbar__breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+
+  .admin-topbar__page {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    color: var(--color-emerald-dark);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .admin-topbar__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .admin-topbar__logout {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.4rem 0.875rem;
+    border-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-size: 0.825rem;
+    font-weight: 600;
+    color: var(--color-stone);
+    background: transparent;
+    border: 1.5px solid var(--color-sand);
+    cursor: pointer;
+    transition: all 150ms var(--ease-out);
+  }
+
+  .admin-topbar__logout:hover {
+    color: var(--color-error);
+    border-color: var(--color-error);
+    background: rgba(196, 69, 54, 0.05);
+  }
+
+  .hidden { display: none; }
+</style>

@@ -6,74 +6,57 @@ export const prerender = false;
 let error = '';
 const { supabase } = Astro.locals;
 
-// Fetch categories for dropdown
 const { data: categories } = await supabase.from('categories').select('id, name').order('name');
 
 if (Astro.request.method === 'POST') {
   const formData = await Astro.request.formData();
-  
-  const name = formData.get('name') as string;
-  const name_en = formData.get('name_en') as string;
-  const slug = formData.get('slug') as string;
-  const category_id = formData.get('category_id') as string;
-  const price = parseInt(formData.get('price') as string) || 0;
-  const price_max = parseInt(formData.get('price_max') as string) || null;
-  const short_description = formData.get('short_description') as string;
+
+  const name                 = formData.get('name') as string;
+  const name_en              = formData.get('name_en') as string;
+  const slug                 = formData.get('slug') as string;
+  const category_id          = formData.get('category_id') as string;
+  const price                = parseInt(formData.get('price') as string) || 0;
+  const price_max            = parseInt(formData.get('price_max') as string) || null;
+  const short_description    = formData.get('short_description') as string;
   const short_description_en = formData.get('short_description_en') as string;
-  const description = formData.get('description') as string;
-  const description_en = formData.get('description_en') as string;
-  
-  const is_active = formData.get('is_active') === 'on';
-  const is_featured = formData.get('is_featured') === 'on';
-  const sort_order = parseInt(formData.get('sort_order') as string) || 0;
-  
-  const image = formData.get('image') as File;
+  const description          = formData.get('description') as string;
+  const description_en       = formData.get('description_en') as string;
+  const is_active            = formData.get('is_active') === 'on';
+  const is_featured          = formData.get('is_featured') === 'on';
+  const sort_order           = parseInt(formData.get('sort_order') as string) || 0;
+  const image                = formData.get('image') as File;
 
   if (!name || !slug || !category_id) {
     error = 'Nama, Slug, dan Kategori wajib diisi.';
   } else {
     let image_url = '';
-    
-    // Upload image if provided
+
     if (image && image.size > 0) {
-      const fileExt = image.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+      const fileExt  = image.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).slice(2, 15)}_${Date.now()}.${fileExt}`;
       const filePath = `products/${fileName}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('products')
-        .upload(filePath, image);
-        
+
+      const { error: uploadError } = await supabase.storage.from('products').upload(filePath, image);
+
       if (uploadError) {
         error = `Gagal upload gambar: ${uploadError.message}`;
       } else {
-        const { data: publicUrlData } = supabase.storage.from('products').getPublicUrl(filePath);
-        image_url = publicUrlData.publicUrl;
+        const { data: urlData } = supabase.storage.from('products').getPublicUrl(filePath);
+        image_url = urlData.publicUrl;
       }
     }
 
     if (!error) {
       const { error: insertError } = await supabase.from('products').insert([{
-        name,
-        name_en,
-        slug,
-        category_id,
-        price,
-        price_max,
-        short_description,
-        short_description_en,
-        description,
-        description_en,
-        image_url: image_url || null,
-        is_active,
-        is_featured,
-        sort_order
+        name, name_en, slug, category_id, price, price_max,
+        short_description, short_description_en, description, description_en,
+        image_url: image_url || null, is_active, is_featured, sort_order,
       }]);
 
       if (insertError) {
         error = insertError.message;
       } else {
-        return Astro.redirect('/admin/products');
+        return Astro.redirect('/admin/products?success=' + encodeURIComponent('Produk berhasil ditambahkan'));
       }
     }
   }
@@ -81,101 +64,476 @@ if (Astro.request.method === 'POST') {
 ---
 
 <AdminLayout title="Tambah Produk">
-  <div class="max-w-[800px] bg-white p-6 rounded-lg border border-sand shadow-brand-sm">
-    <h2 class="mt-0 mb-6 text-emerald-dark font-display text-2xl">Produk Baru</h2>
-    
-    {error && (
-      <div class="bg-red-600 text-white p-3 rounded-md mb-4 text-sm">
-        {error}
-      </div>
-    )}
 
-    <form method="POST" enctype="multipart/form-data">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="mb-4">
-          <label class="block mb-2 font-semibold text-sm text-charcoal">Nama Produk (ID) *</label>
-          <input type="text" name="name" required class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none" />
-        </div>
-        <div class="mb-4">
-          <label class="block mb-2 font-semibold text-sm text-charcoal">Nama Produk (EN)</label>
-          <input type="text" name="name_en" class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none" />
-        </div>
-      </div>
+  <div class="pf-wrap">
+    <!-- Back link -->
+    <a href="/admin/products" class="pf-back">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+      Kembali ke Produk
+    </a>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="mb-4">
-          <label class="block mb-2 font-semibold text-sm text-charcoal">Slug (URL) *</label>
-          <input type="text" name="slug" required placeholder="nasi-tumpeng-mini" class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none" />
-        </div>
-        <div class="mb-4">
-          <label class="block mb-2 font-semibold text-sm text-charcoal">Kategori *</label>
-          <select name="category_id" required class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none bg-white">
-            <option value="">Pilih Kategori</option>
-            {categories?.map((c) => (
-              <option value={c.id}>{c.name}</option>
-            ))}
-          </select>
-        </div>
-      </div>
+    <div class="pf-card">
+      <h2 class="pf-heading">Produk Baru</h2>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="mb-4">
-          <label class="block mb-2 font-semibold text-sm text-charcoal">Harga (Rp)</label>
-          <input type="number" name="price" class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none" />
+      {error && (
+        <div class="pf-error" role="alert">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+          </svg>
+          {error}
         </div>
-        <div class="mb-4">
-          <label class="block mb-2 font-semibold text-sm text-charcoal">Harga Maksimal (Opsional)</label>
-          <input type="number" name="price_max" class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none" />
+      )}
+
+      <form id="product-form" method="POST" enctype="multipart/form-data" novalidate>
+
+        <!-- Names -->
+        <div class="pf-grid-2">
+          <div class="pf-field">
+            <label class="pf-label" for="pf-name">Nama Produk (ID) <span aria-hidden="true">*</span></label>
+            <input id="pf-name" type="text" name="name" required class="pf-input" placeholder="Contoh: Nasi Tumpeng Mini" autocomplete="off" />
+          </div>
+          <div class="pf-field">
+            <label class="pf-label" for="pf-name-en">Nama Produk (EN)</label>
+            <input id="pf-name-en" type="text" name="name_en" class="pf-input" placeholder="e.g. Mini Tumpeng Rice" autocomplete="off" />
+          </div>
         </div>
-      </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="mb-4">
-          <label class="block mb-2 font-semibold text-sm text-charcoal">Deskripsi Singkat (ID)</label>
-          <textarea name="short_description" rows="2" class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none"></textarea>
+        <!-- Slug + Category -->
+        <div class="pf-grid-2">
+          <div class="pf-field">
+            <label class="pf-label" for="pf-slug">Slug (URL) <span aria-hidden="true">*</span></label>
+            <input id="pf-slug" type="text" name="slug" required class="pf-input" placeholder="nasi-tumpeng-mini" autocomplete="off" />
+          </div>
+          <div class="pf-field">
+            <label class="pf-label" for="pf-category">Kategori <span aria-hidden="true">*</span></label>
+            <select id="pf-category" name="category_id" required class="pf-select">
+              <option value="">Pilih Kategori</option>
+              {categories?.map((c) => (
+                <option value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
-        <div class="mb-4">
-          <label class="block mb-2 font-semibold text-sm text-charcoal">Deskripsi Singkat (EN)</label>
-          <textarea name="short_description_en" rows="2" class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none"></textarea>
+
+        <!-- Pricing -->
+        <div class="pf-grid-2">
+          <div class="pf-field">
+            <label class="pf-label" for="pf-price">Harga (Rp)</label>
+            <input id="pf-price" type="number" name="price" class="pf-input" placeholder="75000" min="0" />
+          </div>
+          <div class="pf-field">
+            <label class="pf-label" for="pf-price-max">Harga Maksimal <span class="pf-optional">(opsional)</span></label>
+            <input id="pf-price-max" type="number" name="price_max" class="pf-input" placeholder="150000" min="0" />
+          </div>
         </div>
-      </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="mb-4">
-          <label class="block mb-2 font-semibold text-sm text-charcoal">Deskripsi Lengkap (ID)</label>
-          <textarea name="description" rows="4" class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none"></textarea>
+        <!-- Short descriptions -->
+        <div class="pf-grid-2">
+          <div class="pf-field">
+            <label class="pf-label" for="pf-short-desc">Deskripsi Singkat (ID)</label>
+            <textarea id="pf-short-desc" name="short_description" rows="2" class="pf-textarea" placeholder="Deskripsi singkat dalam Bahasa Indonesia..."></textarea>
+          </div>
+          <div class="pf-field">
+            <label class="pf-label" for="pf-short-desc-en">Deskripsi Singkat (EN)</label>
+            <textarea id="pf-short-desc-en" name="short_description_en" rows="2" class="pf-textarea" placeholder="Short description in English..."></textarea>
+          </div>
         </div>
-        <div class="mb-4">
-          <label class="block mb-2 font-semibold text-sm text-charcoal">Deskripsi Lengkap (EN)</label>
-          <textarea name="description_en" rows="4" class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none"></textarea>
+
+        <!-- Full descriptions -->
+        <div class="pf-grid-2">
+          <div class="pf-field">
+            <label class="pf-label" for="pf-desc">Deskripsi Lengkap (ID)</label>
+            <textarea id="pf-desc" name="description" rows="4" class="pf-textarea" placeholder="Deskripsi lengkap produk dalam Bahasa Indonesia..."></textarea>
+          </div>
+          <div class="pf-field">
+            <label class="pf-label" for="pf-desc-en">Deskripsi Lengkap (EN)</label>
+            <textarea id="pf-desc-en" name="description_en" rows="4" class="pf-textarea" placeholder="Full product description in English..."></textarea>
+          </div>
         </div>
-      </div>
 
-      <div class="mb-4">
-        <label class="block mb-2 font-semibold text-sm text-charcoal">Gambar Produk</label>
-        <input type="file" name="image" accept="image/*" class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none bg-white" />
-      </div>
+        <!-- Image upload (dropzone + cropper) -->
+        <div class="pf-field">
+          <label class="pf-label">Gambar Produk</label>
+          <div class="file-drop-zone" id="image-drop-zone" role="button" tabindex="0" aria-label="Klik atau seret gambar ke sini">
+            <input type="file" name="image" id="image-input" accept="image/*" aria-label="Pilih gambar produk" />
+            <div class="file-drop-zone__icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </div>
+            <div class="file-drop-zone__text">
+              <strong>Klik atau seret gambar ke sini</strong>
+              PNG, JPG, WebP · Gambar akan dipangkas sebelum diunggah
+            </div>
+          </div>
+        </div>
 
-      <div class="flex gap-8 mb-6">
-        <label class="flex items-center gap-2 font-semibold text-sm text-charcoal cursor-pointer">
-          <input type="checkbox" name="is_active" checked class="w-4 h-4 text-emerald-dark accent-emerald-dark" />
-          Tersedia (Bisa dipesan)
-        </label>
-        <label class="flex items-center gap-2 font-semibold text-sm text-charcoal cursor-pointer">
-          <input type="checkbox" name="is_featured" class="w-4 h-4 text-emerald-dark accent-emerald-dark" />
-          Featured (Tampil di beranda)
-        </label>
-      </div>
+        <!-- Flags -->
+        <div class="pf-flags">
+          <label class="pf-toggle">
+            <input type="checkbox" name="is_active" checked class="pf-toggle__input" />
+            <span class="pf-toggle__track" aria-hidden="true"></span>
+            <span class="pf-toggle__label">Tersedia (bisa dipesan)</span>
+          </label>
+          <label class="pf-toggle">
+            <input type="checkbox" name="is_featured" class="pf-toggle__input" />
+            <span class="pf-toggle__track" aria-hidden="true"></span>
+            <span class="pf-toggle__label">Featured (tampil di beranda)</span>
+          </label>
+        </div>
 
-      <div class="mb-6 w-[200px]">
-        <label class="block mb-2 font-semibold text-sm text-charcoal">Urutan (Sort Order)</label>
-        <input type="number" name="sort_order" value="0" class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none" />
-      </div>
+        <!-- Sort order -->
+        <div class="pf-field pf-field--narrow">
+          <label class="pf-label" for="pf-sort">Urutan (Sort Order)</label>
+          <input id="pf-sort" type="number" name="sort_order" value="0" class="pf-input" min="0" />
+        </div>
 
-      <div class="flex gap-4">
-        <button type="submit" class="bg-emerald-dark text-white border-none py-3 px-6 rounded-md font-bold cursor-pointer transition-colors hover:bg-emerald-light shadow-brand-sm">Simpan Produk</button>
-        <a href="/admin/products" class="inline-block py-3 px-6 text-charcoal no-underline border border-sand rounded-md font-bold transition-colors hover:bg-ivory-warm">Batal</a>
-      </div>
-    </form>
+        <!-- Actions -->
+        <div class="pf-actions">
+          <button id="pf-submit" type="submit" class="pf-btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/>
+              <polyline points="7 3 7 8 15 8"/>
+            </svg>
+            Simpan Produk
+          </button>
+          <a href="/admin/products" class="pf-btn-secondary">Batal</a>
+        </div>
+
+      </form>
+    </div>
   </div>
+
 </AdminLayout>
+
+<script>
+  import { openImageCropper }  from '@/lib/admin-cropper';
+  import { initDropzone, showDropzonePreview } from '@/lib/admin-dropzone';
+  import { showToast }         from '@/lib/admin-toast';
+
+  // ── State ──────────────────────────────────────────────────
+  let croppedBlob: Blob | null = null;
+
+  const zoneEl   = document.getElementById('image-drop-zone')  as HTMLElement;
+  const inputEl  = document.getElementById('image-input')      as HTMLInputElement;
+  const form     = document.getElementById('product-form')     as HTMLFormElement;
+  const submitBtn = document.getElementById('pf-submit')       as HTMLButtonElement;
+
+  // ── Dropzone ───────────────────────────────────────────────
+  initDropzone({
+    zoneEl,
+    inputEl,
+    onFileSelected(file: File) {
+      openImageCropper(file, (blob: Blob, dataUrl: string) => {
+        croppedBlob = blob;
+        showDropzonePreview(zoneEl, dataUrl);
+      });
+    },
+  });
+
+  // Keyboard accessibility for drop zone
+  zoneEl.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); inputEl.click(); }
+  });
+
+  // ── Form submission ────────────────────────────────────────
+  form.addEventListener('submit', async (e: SubmitEvent) => {
+    // No cropped image → let the browser submit normally (Astro handles it server-side)
+    if (!croppedBlob) return;
+
+    e.preventDefault();
+
+    // Quick client-side validation before fetch
+    const fd = new FormData(form);
+    const name       = (fd.get('name')        as string)?.trim();
+    const slug       = (fd.get('slug')        as string)?.trim();
+    const categoryId = (fd.get('category_id') as string)?.trim();
+
+    if (!name || !slug || !categoryId) {
+      showToast('Nama, Slug, dan Kategori wajib diisi.', 'error');
+      return;
+    }
+
+    // Replace file field with the cropped blob
+    fd.set('image', croppedBlob, 'product-image.jpg');
+
+    submitBtn.disabled    = true;
+    submitBtn.textContent = 'Menyimpan…';
+
+    try {
+      const res = await fetch(window.location.href, {
+        method:   'POST',
+        body:     fd,
+        redirect: 'follow',
+      });
+
+      if (res.redirected || res.ok) {
+        // Build success URL (add toast param if not already on products page)
+        const successUrl = new URL('/admin/products', window.location.href);
+        successUrl.searchParams.set('success', 'Produk berhasil ditambahkan');
+        window.location.href = successUrl.toString();
+      } else {
+        showToast('Terjadi kesalahan. Periksa kembali data produk.', 'error');
+        submitBtn.disabled    = false;
+        submitBtn.textContent = 'Simpan Produk';
+      }
+    } catch {
+      showToast('Terjadi kesalahan jaringan. Coba lagi.', 'error');
+      submitBtn.disabled    = false;
+      submitBtn.textContent = 'Simpan Produk';
+    }
+  });
+
+  // ── Auto-generate slug from name ──────────────────────────
+  const nameInput = document.getElementById('pf-name') as HTMLInputElement;
+  const slugInput = document.getElementById('pf-slug') as HTMLInputElement;
+
+  nameInput?.addEventListener('input', () => {
+    if (slugInput && !slugInput.dataset.manuallyEdited) {
+      slugInput.value = nameInput.value
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .trim()
+        .replace(/\s+/g, '-');
+    }
+  });
+
+  slugInput?.addEventListener('input', () => {
+    slugInput.dataset.manuallyEdited = 'true';
+  });
+</script>
+
+<style>
+  .pf-wrap {
+    max-width: 860px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .pf-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    color: var(--color-stone);
+    font-size: 0.825rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 150ms;
+  }
+
+  .pf-back:hover { color: var(--color-emerald); }
+
+  .pf-card {
+    background: var(--color-white);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-sand);
+    box-shadow: var(--shadow-sm);
+    padding: 2rem 2rem 2.5rem;
+  }
+
+  .pf-heading {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    color: var(--color-emerald-dark);
+    margin: 0 0 1.75rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--color-sand);
+  }
+
+  .pf-error {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(196, 69, 54, 0.08);
+    border: 1.5px solid rgba(196, 69, 54, 0.25);
+    color: var(--color-error);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  .pf-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  @media (max-width: 640px) {
+    .pf-grid-2 { grid-template-columns: 1fr; }
+  }
+
+  .pf-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    margin-bottom: 1rem;
+  }
+
+  .pf-field--narrow { max-width: 200px; }
+
+  .pf-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-charcoal);
+    letter-spacing: 0.02em;
+  }
+
+  .pf-optional {
+    font-weight: 400;
+    color: var(--color-stone-light);
+    font-size: 0.75rem;
+  }
+
+  .pf-input,
+  .pf-select,
+  .pf-textarea {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    border: 1.5px solid var(--color-sand);
+    border-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    color: var(--color-charcoal);
+    background: var(--color-white);
+    transition: border-color 150ms var(--ease-out), box-shadow 150ms var(--ease-out);
+    outline: none;
+    box-sizing: border-box;
+  }
+
+  .pf-input:focus,
+  .pf-select:focus,
+  .pf-textarea:focus {
+    border-color: var(--color-emerald);
+    box-shadow: 0 0 0 3px var(--color-emerald-glass);
+  }
+
+  .pf-textarea { resize: vertical; min-height: 80px; }
+
+  /* ── Toggle switch ── */
+  .pf-flags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .pf-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .pf-toggle__input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .pf-toggle__track {
+    display: inline-block;
+    width: 40px;
+    height: 22px;
+    border-radius: var(--radius-full);
+    background: var(--color-sand);
+    position: relative;
+    flex-shrink: 0;
+    transition: background 200ms;
+  }
+
+  .pf-toggle__track::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--color-white);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+    transition: transform 200ms var(--ease-spring);
+  }
+
+  .pf-toggle__input:checked + .pf-toggle__track {
+    background: var(--color-emerald);
+  }
+
+  .pf-toggle__input:checked + .pf-toggle__track::after {
+    transform: translateX(18px);
+  }
+
+  .pf-toggle__label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-charcoal);
+  }
+
+  /* ── Actions ── */
+  .pf-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1.75rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-sand);
+  }
+
+  .pf-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--color-emerald-dark);
+    color: var(--color-white);
+    padding: 0.65rem 1.4rem;
+    border-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: all 150ms var(--ease-out);
+  }
+
+  .pf-btn-primary:hover {
+    background: var(--color-emerald-light);
+    box-shadow: var(--shadow-emerald);
+    transform: translateY(-1px);
+  }
+
+  .pf-btn-primary:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .pf-btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.65rem 1.2rem;
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-stone);
+    background: var(--color-ivory-warm);
+    border: 1.5px solid var(--color-sand);
+    text-decoration: none;
+    transition: all 150ms;
+  }
+
+  .pf-btn-secondary:hover {
+    background: var(--color-sand);
+    color: var(--color-charcoal);
+  }
+</style>

@@ -4,13 +4,11 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 export const prerender = false;
 
 let error = '';
-const { id } = Astro.params;
+const { id }       = Astro.params;
 const { supabase } = Astro.locals;
 
-// Fetch categories
 const { data: categories } = await supabase.from('categories').select('id, name').order('name');
 
-// Fetch product
 const { data: product, error: fetchError } = await supabase
   .from('products')
   .select('*')
@@ -23,70 +21,57 @@ if (fetchError || !product) {
 
 if (Astro.request.method === 'POST') {
   const formData = await Astro.request.formData();
-  
-  const name = formData.get('name') as string;
-  const name_en = formData.get('name_en') as string;
-  const slug = formData.get('slug') as string;
-  const category_id = formData.get('category_id') as string;
-  const price = parseInt(formData.get('price') as string) || 0;
-  const price_max = parseInt(formData.get('price_max') as string) || null;
-  const short_description = formData.get('short_description') as string;
+
+  const name                 = formData.get('name') as string;
+  const name_en              = formData.get('name_en') as string;
+  const slug                 = formData.get('slug') as string;
+  const category_id          = formData.get('category_id') as string;
+  const price                = parseInt(formData.get('price') as string) || 0;
+  const price_max            = parseInt(formData.get('price_max') as string) || null;
+  const short_description    = formData.get('short_description') as string;
   const short_description_en = formData.get('short_description_en') as string;
-  const description = formData.get('description') as string;
-  const description_en = formData.get('description_en') as string;
-  
-  const is_active = formData.get('is_active') === 'on';
-  const is_featured = formData.get('is_featured') === 'on';
-  const sort_order = parseInt(formData.get('sort_order') as string) || 0;
-  
-  const image = formData.get('image') as File;
+  const description          = formData.get('description') as string;
+  const description_en       = formData.get('description_en') as string;
+  const is_active            = formData.get('is_active') === 'on';
+  const is_featured          = formData.get('is_featured') === 'on';
+  const sort_order           = parseInt(formData.get('sort_order') as string) || 0;
+  const image                = formData.get('image') as File;
 
   if (!name || !slug || !category_id) {
     error = 'Nama, Slug, dan Kategori wajib diisi.';
   } else {
     let image_url = product.image_url;
-    
-    // Upload image if provided
+
     if (image && image.size > 0) {
-      const fileExt = image.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+      const fileExt  = image.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).slice(2, 15)}_${Date.now()}.${fileExt}`;
       const filePath = `products/${fileName}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('products')
-        .upload(filePath, image);
-        
+
+      const { error: uploadError } = await supabase.storage.from('products').upload(filePath, image);
+
       if (uploadError) {
         error = `Gagal upload gambar: ${uploadError.message}`;
       } else {
-        const { data: publicUrlData } = supabase.storage.from('products').getPublicUrl(filePath);
-        image_url = publicUrlData.publicUrl;
+        const { data: urlData } = supabase.storage.from('products').getPublicUrl(filePath);
+        image_url = urlData.publicUrl;
       }
     }
 
     if (!error) {
-      const { error: updateError } = await supabase.from('products').update({
-        name,
-        name_en,
-        slug,
-        category_id,
-        price,
-        price_max,
-        short_description,
-        short_description_en,
-        description,
-        description_en,
-        image_url,
-        is_active,
-        is_featured,
-        sort_order,
-        updated_at: new Date().toISOString()
-      }).eq('id', id);
+      const { error: updateError } = await supabase
+        .from('products')
+        .update({
+          name, name_en, slug, category_id, price, price_max,
+          short_description, short_description_en, description, description_en,
+          image_url, is_active, is_featured, sort_order,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id);
 
       if (updateError) {
         error = updateError.message;
       } else {
-        return Astro.redirect('/admin/products');
+        return Astro.redirect('/admin/products?success=' + encodeURIComponent('Produk berhasil diperbarui'));
       }
     }
   }
@@ -94,107 +79,298 @@ if (Astro.request.method === 'POST') {
 ---
 
 <AdminLayout title="Edit Produk">
-  <div class="max-w-[800px] bg-white p-6 rounded-lg border border-sand shadow-brand-sm">
-    <h2 class="mt-0 mb-6 text-emerald-dark font-display text-2xl">Edit Produk</h2>
-    
-    {error && (
-      <div class="bg-red-600 text-white p-3 rounded-md mb-4 text-sm">
-        {error}
-      </div>
-    )}
 
-    <form method="POST" enctype="multipart/form-data">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="mb-4">
-          <label class="block mb-2 font-semibold text-sm text-charcoal">Nama Produk (ID) *</label>
-          <input type="text" name="name" value={product.name} required class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none" />
-        </div>
-        <div class="mb-4">
-          <label class="block mb-2 font-semibold text-sm text-charcoal">Nama Produk (EN)</label>
-          <input type="text" name="name_en" value={product.name_en || ''} class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none" />
-        </div>
-      </div>
+  <div class="pf-wrap">
+    <a href="/admin/products" class="pf-back">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+      Kembali ke Produk
+    </a>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="mb-4">
-          <label class="block mb-2 font-semibold text-sm text-charcoal">Slug (URL) *</label>
-          <input type="text" name="slug" value={product.slug} required class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none" />
-        </div>
-        <div class="mb-4">
-          <label class="block mb-2 font-semibold text-sm text-charcoal">Kategori *</label>
-          <select name="category_id" required class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none bg-white">
-            <option value="">Pilih Kategori</option>
-            {categories?.map((c) => (
-              <option value={c.id} selected={c.id === product.category_id}>{c.name}</option>
-            ))}
-          </select>
-        </div>
-      </div>
+    <div class="pf-card">
+      <h2 class="pf-heading">Edit Produk</h2>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="mb-4">
-          <label class="block mb-2 font-semibold text-sm text-charcoal">Harga (Rp)</label>
-          <input type="number" name="price" value={product.price || ''} class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none" />
+      {error && (
+        <div class="pf-error" role="alert">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+          </svg>
+          {error}
         </div>
-        <div class="mb-4">
-          <label class="block mb-2 font-semibold text-sm text-charcoal">Harga Maksimal (Opsional)</label>
-          <input type="number" name="price_max" value={product.price_max || ''} class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none" />
-        </div>
-      </div>
+      )}
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="mb-4">
-          <label class="block mb-2 font-semibold text-sm text-charcoal">Deskripsi Singkat (ID)</label>
-          <textarea name="short_description" rows="2" class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none">{product.short_description || ''}</textarea>
-        </div>
-        <div class="mb-4">
-          <label class="block mb-2 font-semibold text-sm text-charcoal">Deskripsi Singkat (EN)</label>
-          <textarea name="short_description_en" rows="2" class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none">{product.short_description_en || ''}</textarea>
-        </div>
-      </div>
+      <form id="product-form" method="POST" enctype="multipart/form-data" novalidate>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="mb-4">
-          <label class="block mb-2 font-semibold text-sm text-charcoal">Deskripsi Lengkap (ID)</label>
-          <textarea name="description" rows="4" class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none">{product.description || ''}</textarea>
-        </div>
-        <div class="mb-4">
-          <label class="block mb-2 font-semibold text-sm text-charcoal">Deskripsi Lengkap (EN)</label>
-          <textarea name="description_en" rows="4" class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none">{product.description_en || ''}</textarea>
-        </div>
-      </div>
-
-      <div class="mb-4">
-        <label class="block mb-2 font-semibold text-sm text-charcoal">Gambar Produk</label>
-        {product.image_url && (
-          <div class="mb-4">
-            <img src={product.image_url} alt="Current" class="w-[150px] rounded-lg border border-sand shadow-sm" />
+        <div class="pf-grid-2">
+          <div class="pf-field">
+            <label class="pf-label" for="pf-name">Nama Produk (ID) <span aria-hidden="true">*</span></label>
+            <input id="pf-name" type="text" name="name" value={product.name} required class="pf-input" autocomplete="off" />
           </div>
-        )}
-        <input type="file" name="image" accept="image/*" class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none bg-white" />
-        <small class="text-stone text-xs mt-1 block">Biarkan kosong jika tidak ingin mengubah gambar.</small>
-      </div>
+          <div class="pf-field">
+            <label class="pf-label" for="pf-name-en">Nama Produk (EN)</label>
+            <input id="pf-name-en" type="text" name="name_en" value={product.name_en ?? ''} class="pf-input" autocomplete="off" />
+          </div>
+        </div>
 
-      <div class="flex gap-8 mb-6">
-        <label class="flex items-center gap-2 font-semibold text-sm text-charcoal cursor-pointer">
-          <input type="checkbox" name="is_active" checked={product.is_active} class="w-4 h-4 text-emerald-dark accent-emerald-dark" />
-          Tersedia (Bisa dipesan)
-        </label>
-        <label class="flex items-center gap-2 font-semibold text-sm text-charcoal cursor-pointer">
-          <input type="checkbox" name="is_featured" checked={product.is_featured} class="w-4 h-4 text-emerald-dark accent-emerald-dark" />
-          Featured (Tampil di beranda)
-        </label>
-      </div>
+        <div class="pf-grid-2">
+          <div class="pf-field">
+            <label class="pf-label" for="pf-slug">Slug (URL) <span aria-hidden="true">*</span></label>
+            <input id="pf-slug" type="text" name="slug" value={product.slug} required class="pf-input" autocomplete="off" />
+          </div>
+          <div class="pf-field">
+            <label class="pf-label" for="pf-category">Kategori <span aria-hidden="true">*</span></label>
+            <select id="pf-category" name="category_id" required class="pf-select">
+              <option value="">Pilih Kategori</option>
+              {categories?.map((c) => (
+                <option value={c.id} selected={c.id === product.category_id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+        </div>
 
-      <div class="mb-6 w-[200px]">
-        <label class="block mb-2 font-semibold text-sm text-charcoal">Urutan (Sort Order)</label>
-        <input type="number" name="sort_order" value={product.sort_order} class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none" />
-      </div>
+        <div class="pf-grid-2">
+          <div class="pf-field">
+            <label class="pf-label" for="pf-price">Harga (Rp)</label>
+            <input id="pf-price" type="number" name="price" value={product.price ?? ''} class="pf-input" min="0" />
+          </div>
+          <div class="pf-field">
+            <label class="pf-label" for="pf-price-max">Harga Maksimal <span class="pf-optional">(opsional)</span></label>
+            <input id="pf-price-max" type="number" name="price_max" value={product.price_max ?? ''} class="pf-input" min="0" />
+          </div>
+        </div>
 
-      <div class="flex gap-4">
-        <button type="submit" class="bg-emerald-dark text-white border-none py-3 px-6 rounded-md font-bold cursor-pointer transition-colors hover:bg-emerald-light shadow-brand-sm">Update Produk</button>
-        <a href="/admin/products" class="inline-block py-3 px-6 text-charcoal no-underline border border-sand rounded-md font-bold transition-colors hover:bg-ivory-warm">Batal</a>
-      </div>
-    </form>
+        <div class="pf-grid-2">
+          <div class="pf-field">
+            <label class="pf-label" for="pf-short-desc">Deskripsi Singkat (ID)</label>
+            <textarea id="pf-short-desc" name="short_description" rows="2" class="pf-textarea">{product.short_description ?? ''}</textarea>
+          </div>
+          <div class="pf-field">
+            <label class="pf-label" for="pf-short-desc-en">Deskripsi Singkat (EN)</label>
+            <textarea id="pf-short-desc-en" name="short_description_en" rows="2" class="pf-textarea">{product.short_description_en ?? ''}</textarea>
+          </div>
+        </div>
+
+        <div class="pf-grid-2">
+          <div class="pf-field">
+            <label class="pf-label" for="pf-desc">Deskripsi Lengkap (ID)</label>
+            <textarea id="pf-desc" name="description" rows="4" class="pf-textarea">{product.description ?? ''}</textarea>
+          </div>
+          <div class="pf-field">
+            <label class="pf-label" for="pf-desc-en">Deskripsi Lengkap (EN)</label>
+            <textarea id="pf-desc-en" name="description_en" rows="4" class="pf-textarea">{product.description_en ?? ''}</textarea>
+          </div>
+        </div>
+
+        <!-- Image upload with cropper -->
+        <div class="pf-field">
+          <label class="pf-label">Gambar Produk</label>
+          <div class="file-drop-zone" id="image-drop-zone" role="button" tabindex="0" aria-label="Klik atau seret gambar ke sini">
+            <input type="file" name="image" id="image-input" accept="image/*" aria-label="Pilih gambar produk" />
+            <div class="file-drop-zone__icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </div>
+            {product.image_url ? (
+              <div class="file-drop-zone__preview" id="current-preview">
+                <img src={product.image_url} alt="Gambar saat ini" />
+              </div>
+            ) : null}
+            <div class="file-drop-zone__text" id="drop-zone-text">
+              {product.image_url
+                ? (<><strong>Gambar saat ini</strong>Klik atau seret untuk mengganti gambar</>)
+                : (<><strong>Klik atau seret gambar ke sini</strong>PNG, JPG, WebP · Gambar akan dipangkas sebelum diunggah</>)
+              }
+            </div>
+          </div>
+          {product.image_url && (
+            <p class="pf-hint">Biarkan kosong untuk mempertahankan gambar saat ini.</p>
+          )}
+        </div>
+
+        <div class="pf-flags">
+          <label class="pf-toggle">
+            <input type="checkbox" name="is_active" checked={product.is_active} class="pf-toggle__input" />
+            <span class="pf-toggle__track" aria-hidden="true"></span>
+            <span class="pf-toggle__label">Tersedia (bisa dipesan)</span>
+          </label>
+          <label class="pf-toggle">
+            <input type="checkbox" name="is_featured" checked={product.is_featured} class="pf-toggle__input" />
+            <span class="pf-toggle__track" aria-hidden="true"></span>
+            <span class="pf-toggle__label">Featured (tampil di beranda)</span>
+          </label>
+        </div>
+
+        <div class="pf-field pf-field--narrow">
+          <label class="pf-label" for="pf-sort">Urutan (Sort Order)</label>
+          <input id="pf-sort" type="number" name="sort_order" value={product.sort_order} class="pf-input" min="0" />
+        </div>
+
+        <div class="pf-actions">
+          <button id="pf-submit" type="submit" class="pf-btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/>
+              <polyline points="7 3 7 8 15 8"/>
+            </svg>
+            Update Produk
+          </button>
+          <a href="/admin/products" class="pf-btn-secondary">Batal</a>
+        </div>
+
+      </form>
+    </div>
   </div>
+
 </AdminLayout>
+
+<script>
+  import { openImageCropper }                  from '@/lib/admin-cropper';
+  import { initDropzone, showDropzonePreview } from '@/lib/admin-dropzone';
+  import { showToast }                         from '@/lib/admin-toast';
+
+  let croppedBlob: Blob | null = null;
+
+  const zoneEl    = document.getElementById('image-drop-zone') as HTMLElement;
+  const inputEl   = document.getElementById('image-input')     as HTMLInputElement;
+  const form      = document.getElementById('product-form')    as HTMLFormElement;
+  const submitBtn = document.getElementById('pf-submit')       as HTMLButtonElement;
+
+  initDropzone({
+    zoneEl,
+    inputEl,
+    onFileSelected(file: File) {
+      openImageCropper(file, (blob: Blob, dataUrl: string) => {
+        croppedBlob = blob;
+        showDropzonePreview(zoneEl, dataUrl);
+      });
+    },
+  });
+
+  zoneEl.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); inputEl.click(); }
+  });
+
+  form.addEventListener('submit', async (e: SubmitEvent) => {
+    if (!croppedBlob) return; // No new image → normal form submit
+
+    e.preventDefault();
+
+    const fd         = new FormData(form);
+    const name       = (fd.get('name')        as string)?.trim();
+    const slug       = (fd.get('slug')        as string)?.trim();
+    const categoryId = (fd.get('category_id') as string)?.trim();
+
+    if (!name || !slug || !categoryId) {
+      showToast('Nama, Slug, dan Kategori wajib diisi.', 'error');
+      return;
+    }
+
+    fd.set('image', croppedBlob, 'product-image.jpg');
+
+    submitBtn.disabled    = true;
+    submitBtn.textContent = 'Menyimpan…';
+
+    try {
+      const res = await fetch(window.location.href, {
+        method:   'POST',
+        body:     fd,
+        redirect: 'follow',
+      });
+
+      if (res.redirected || res.ok) {
+        const successUrl = new URL('/admin/products', window.location.href);
+        successUrl.searchParams.set('success', 'Produk berhasil diperbarui');
+        window.location.href = successUrl.toString();
+      } else {
+        showToast('Terjadi kesalahan. Periksa kembali data produk.', 'error');
+        submitBtn.disabled    = false;
+        submitBtn.textContent = 'Update Produk';
+      }
+    } catch {
+      showToast('Terjadi kesalahan jaringan. Coba lagi.', 'error');
+      submitBtn.disabled    = false;
+      submitBtn.textContent = 'Update Produk';
+    }
+  });
+</script>
+
+<style>
+  /* Reuse the same styles as new.astro (scoped per file in Astro) */
+  .pf-wrap { max-width: 860px; display: flex; flex-direction: column; gap: 1rem; }
+  .pf-back {
+    display: inline-flex; align-items: center; gap: 0.375rem;
+    color: var(--color-stone); font-size: 0.825rem; font-weight: 600;
+    text-decoration: none; transition: color 150ms;
+  }
+  .pf-back:hover { color: var(--color-emerald); }
+  .pf-card {
+    background: var(--color-white); border-radius: var(--radius-lg);
+    border: 1px solid var(--color-sand); box-shadow: var(--shadow-sm); padding: 2rem 2rem 2.5rem;
+  }
+  .pf-heading {
+    font-family: var(--font-display); font-size: 1.5rem; color: var(--color-emerald-dark);
+    margin: 0 0 1.75rem; padding-bottom: 1rem; border-bottom: 1px solid var(--color-sand);
+  }
+  .pf-error {
+    display: flex; align-items: center; gap: 0.5rem;
+    background: rgba(196,69,54,0.08); border: 1.5px solid rgba(196,69,54,0.25);
+    color: var(--color-error); border-radius: var(--radius-md);
+    padding: 0.75rem 1rem; margin-bottom: 1.5rem; font-size: 0.875rem; font-weight: 500;
+  }
+  .pf-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+  @media (max-width: 640px) { .pf-grid-2 { grid-template-columns: 1fr; } }
+  .pf-field { display: flex; flex-direction: column; gap: 0.375rem; margin-bottom: 1rem; }
+  .pf-field--narrow { max-width: 200px; }
+  .pf-label { font-size: 0.8rem; font-weight: 600; color: var(--color-charcoal); letter-spacing: 0.02em; }
+  .pf-optional { font-weight: 400; color: var(--color-stone-light); font-size: 0.75rem; }
+  .pf-hint { font-size: 0.75rem; color: var(--color-stone); margin: 0.375rem 0 0; max-width: none; }
+  .pf-input, .pf-select, .pf-textarea {
+    width: 100%; padding: 0.625rem 0.875rem; border: 1.5px solid var(--color-sand);
+    border-radius: var(--radius-md); font-family: var(--font-body); font-size: 0.9rem;
+    color: var(--color-charcoal); background: var(--color-white); outline: none; box-sizing: border-box;
+    transition: border-color 150ms var(--ease-out), box-shadow 150ms var(--ease-out);
+  }
+  .pf-input:focus, .pf-select:focus, .pf-textarea:focus {
+    border-color: var(--color-emerald); box-shadow: 0 0 0 3px var(--color-emerald-glass);
+  }
+  .pf-textarea { resize: vertical; min-height: 80px; }
+  .pf-flags { display: flex; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 1.25rem; }
+  .pf-toggle { display: flex; align-items: center; gap: 0.625rem; cursor: pointer; user-select: none; }
+  .pf-toggle__input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .pf-toggle__track {
+    display: inline-block; width: 40px; height: 22px; border-radius: var(--radius-full);
+    background: var(--color-sand); position: relative; flex-shrink: 0; transition: background 200ms;
+  }
+  .pf-toggle__track::after {
+    content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px;
+    border-radius: 50%; background: var(--color-white);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.18); transition: transform 200ms var(--ease-spring);
+  }
+  .pf-toggle__input:checked + .pf-toggle__track { background: var(--color-emerald); }
+  .pf-toggle__input:checked + .pf-toggle__track::after { transform: translateX(18px); }
+  .pf-toggle__label { font-size: 0.875rem; font-weight: 500; color: var(--color-charcoal); }
+  .pf-actions {
+    display: flex; align-items: center; gap: 0.75rem;
+    margin-top: 1.75rem; padding-top: 1.5rem; border-top: 1px solid var(--color-sand);
+  }
+  .pf-btn-primary {
+    display: inline-flex; align-items: center; gap: 0.5rem; background: var(--color-emerald-dark);
+    color: var(--color-white); padding: 0.65rem 1.4rem; border-radius: var(--radius-md);
+    font-family: var(--font-body); font-size: 0.9rem; font-weight: 600; border: none;
+    cursor: pointer; box-shadow: var(--shadow-sm); transition: all 150ms var(--ease-out);
+  }
+  .pf-btn-primary:hover {
+    background: var(--color-emerald-light); box-shadow: var(--shadow-emerald); transform: translateY(-1px);
+  }
+  .pf-btn-primary:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
+  .pf-btn-secondary {
+    display: inline-flex; align-items: center; padding: 0.65rem 1.2rem; border-radius: var(--radius-md);
+    font-size: 0.9rem; font-weight: 600; color: var(--color-stone);
+    background: var(--color-ivory-warm); border: 1.5px solid var(--color-sand); text-decoration: none; transition: all 150ms;
+  }
+  .pf-btn-secondary:hover { background: var(--color-sand); color: var(--color-charcoal); }
+</style>
