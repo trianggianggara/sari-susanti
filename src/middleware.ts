@@ -21,8 +21,10 @@ export const onRequest = defineMiddleware(async ({ locals, request, url, cookies
     return rewrite(target);
   }
 
-  if (pathname.startsWith('/admin')) {
-    // Initialize Supabase ONLY for admin routes to avoid cookie warnings during static build
+  const needsAuth = pathname.startsWith('/admin') || pathname.startsWith('/api/auth');
+
+  if (needsAuth) {
+    // Initialize Supabase ONLY for auth routes to avoid cookie warnings during static build
     const supabase = createServerClient(request, cookies);
     const {
       data: { session },
@@ -30,14 +32,16 @@ export const onRequest = defineMiddleware(async ({ locals, request, url, cookies
 
     locals.supabase = supabase;
     locals.session = session;
+  }
 
+  if (pathname.startsWith('/admin')) {
     const isLoginRoute = pathname === redirectRoute;
 
-    if (!session && !isLoginRoute) {
+    if (!locals.session && !isLoginRoute) {
       return redirect(redirectRoute);
     }
 
-    if (session && isLoginRoute) {
+    if (locals.session && isLoginRoute) {
       return redirect('/admin');
     }
   }
