@@ -264,13 +264,22 @@ const isEn = locale === 'en';
     });
 
     clearBtn?.addEventListener('click', async () => {
-      const { showConfirmDialog } = await import('/src/lib/dialog.ts');
-      const msg = isEn
-        ? 'All items in your cart will be removed. This cannot be undone.'
-        : 'Semua item dalam keranjang akan dihapus. Tindakan ini tidak bisa dibatalkan.';
-      const label = isEn ? 'Yes, Clear' : 'Ya, Kosongkan';
-      const title = isEn ? 'Clear Order?' : 'Kosongkan Pesanan?';
-      const confirmed = await showConfirmDialog(msg, { title, confirmLabel: label });
+      let confirmed = false;
+      try {
+        const { showConfirmDialog } = await import('/src/lib/dialog.ts');
+        const msg = isEn
+          ? 'All items in your cart will be removed. This cannot be undone.'
+          : 'Semua item dalam keranjang akan dihapus. Tindakan ini tidak bisa dibatalkan.';
+        const label = isEn ? 'Yes, Clear' : 'Ya, Kosongkan';
+        const title = isEn ? 'Clear Order?' : 'Kosongkan Pesanan?';
+        confirmed = await showConfirmDialog(msg, { title, confirmLabel: label });
+      } catch {
+        // Fallback ke native confirm jika module gagal dimuat (misal di production)
+        const msg = isEn
+          ? 'All items in your cart will be removed. This cannot be undone.'
+          : 'Semua item dalam keranjang akan dihapus. Tindakan ini tidak bisa dibatalkan.';
+        confirmed = window.confirm(msg);
+      }
       if (confirmed) saveItems([]);
     });
 

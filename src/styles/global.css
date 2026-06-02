@@ -780,7 +780,8 @@ p {
    ADMIN UI — CONFIRM DIALOG
 ═══════════════════════════════════════════════════════════════ */
 
-#admin-confirm-dialog {
+#admin-confirm-dialog,
+#app-confirm-dialog {
   padding: 0;
   border: none;
   border-radius: var(--radius-xl);
@@ -796,7 +797,8 @@ p {
   animation: dialogIn 0.35s var(--ease-spring) both;
 }
 
-#admin-confirm-dialog::backdrop {
+#admin-confirm-dialog::backdrop,
+#app-confirm-dialog::backdrop {
   background: rgba(20, 20, 20, 0.6);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
