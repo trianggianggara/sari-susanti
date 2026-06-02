@@ -263,23 +263,76 @@ const isEn = locale === 'en';
       }
     });
 
+    // Inline confirm dialog (avoids dynamic-import issues in production)
+    function showConfirmDialog(message, opts = {}) {
+      return new Promise((resolve) => {
+        let dialog = document.getElementById('app-confirm-dialog');
+        if (!dialog) {
+          dialog = document.createElement('dialog');
+          dialog.id = 'app-confirm-dialog';
+          dialog.setAttribute('aria-labelledby', 'confirm-dialog-title');
+          dialog.innerHTML = `
+            <div class="confirm-dialog__content">
+              <div class="confirm-dialog__icon" aria-hidden="true">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/>
+                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+              </div>
+              <h3 id="confirm-dialog-title" class="confirm-dialog__title">Konfirmasi</h3>
+              <p class="confirm-dialog__message"></p>
+              <div class="confirm-dialog__actions">
+                <button class="confirm-dialog__cancel" id="confirm-cancel-btn" type="button">Batal</button>
+                <button class="confirm-dialog__confirm" id="confirm-ok-btn" type="button">Ya</button>
+              </div>
+            </div>
+          `;
+          document.body.appendChild(dialog);
+
+          if (!('closedBy' in HTMLDialogElement.prototype)) {
+            dialog.addEventListener('click', (e) => {
+              if (e.target !== dialog) return;
+              const rect = dialog.getBoundingClientRect();
+              const inside = rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
+                             rect.left <= e.clientX && e.clientX <= rect.left + rect.width;
+              if (!inside) dialog.close('cancel');
+            });
+          }
+        }
+
+        const titleEl   = dialog.querySelector('.confirm-dialog__title');
+        const msgEl     = dialog.querySelector('.confirm-dialog__message');
+        const okBtn     = dialog.querySelector('#confirm-ok-btn');
+        const cancelBtn = dialog.querySelector('#confirm-cancel-btn');
+
+        titleEl.textContent  = opts.title || (isEn ? 'Confirmation' : 'Konfirmasi');
+        msgEl.textContent    = message;
+        okBtn.textContent    = opts.confirmLabel || (isEn ? 'Yes' : 'Ya');
+        cancelBtn.textContent = isEn ? 'Cancel' : 'Batal';
+
+        function cleanup() {
+          okBtn.removeEventListener('click', onOk);
+          cancelBtn.removeEventListener('click', onCancel);
+        }
+        function onOk() { cleanup(); dialog.close('confirm'); resolve(true); }
+        function onCancel() { cleanup(); dialog.close('cancel'); resolve(false); }
+
+        okBtn.addEventListener('click', onOk);
+        cancelBtn.addEventListener('click', onCancel);
+        dialog.addEventListener('cancel', () => { cleanup(); resolve(false); }, { once: true });
+        try { dialog.setAttribute('closedby', 'any'); } catch { /* ignore */ }
+        dialog.showModal();
+      });
+    }
+
     clearBtn?.addEventListener('click', async () => {
-      let confirmed = false;
-      try {
-        const { showConfirmDialog } = await import('/src/lib/dialog.ts');
-        const msg = isEn
-          ? 'All items in your cart will be removed. This cannot be undone.'
-          : 'Semua item dalam keranjang akan dihapus. Tindakan ini tidak bisa dibatalkan.';
-        const label = isEn ? 'Yes, Clear' : 'Ya, Kosongkan';
-        const title = isEn ? 'Clear Order?' : 'Kosongkan Pesanan?';
-        confirmed = await showConfirmDialog(msg, { title, confirmLabel: label });
-      } catch {
-        // Fallback ke native confirm jika module gagal dimuat (misal di production)
-        const msg = isEn
-          ? 'All items in your cart will be removed. This cannot be undone.'
-          : 'Semua item dalam keranjang akan dihapus. Tindakan ini tidak bisa dibatalkan.';
-        confirmed = window.confirm(msg);
-      }
+      const msg = isEn
+        ? 'All items in your cart will be removed. This cannot be undone.'
+        : 'Semua item dalam keranjang akan dihapus. Tindakan ini tidak bisa dibatalkan.';
+      const label = isEn ? 'Yes, Clear' : 'Ya, Kosongkan';
+      const title = isEn ? 'Clear Order?' : 'Kosongkan Pesanan?';
+      const confirmed = await showConfirmDialog(msg, { title, confirmLabel: label });
       if (confirmed) saveItems([]);
     });
 
