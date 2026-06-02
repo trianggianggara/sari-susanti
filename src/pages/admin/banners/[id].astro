@@ -3,7 +3,6 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 
 export const prerender = false;
 
-let error = '';
 const { id } = Astro.params;
 const { supabase } = Astro.locals;
 
@@ -17,82 +16,13 @@ const { data: banner, error: fetchError } = await supabase
 if (fetchError || !banner) {
   return Astro.redirect('/admin/banners');
 }
-
-if (Astro.request.method === 'POST') {
-  const formData = await Astro.request.formData();
-  
-  const title = formData.get('title') as string;
-  const title_en = formData.get('title_en') as string;
-  const subtitle = formData.get('subtitle') as string;
-  const subtitle_en = formData.get('subtitle_en') as string;
-  const cta_text = formData.get('cta_text') as string;
-  const cta_text_en = formData.get('cta_text_en') as string;
-  const cta_link = formData.get('cta_link') as string;
-  
-  const is_active = formData.get('is_active') === 'on';
-  const sort_order = parseInt(formData.get('sort_order') as string) || 0;
-  
-  const image = formData.get('image') as File;
-
-  if (!title) {
-    error = 'Judul wajib diisi.';
-  } else {
-    let image_url = banner.image_url;
-    
-    // Upload image
-    if (image && image.size > 0) {
-      const fileExt = image.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('banners')
-        .upload(filePath, image);
-        
-      if (uploadError) {
-        error = `Gagal upload gambar: ${uploadError.message}`;
-      } else {
-        const { data: publicUrlData } = supabase.storage.from('banners').getPublicUrl(filePath);
-        image_url = publicUrlData.publicUrl;
-      }
-    }
-
-    if (!error) {
-      const { error: updateError } = await supabase.from('banners').update({
-        title,
-        title_en,
-        subtitle,
-        subtitle_en,
-        image_url,
-        cta_text,
-        cta_text_en,
-        cta_link,
-        is_active,
-        sort_order,
-        updated_at: new Date().toISOString()
-      }).eq('id', id);
-
-      if (updateError) {
-        error = updateError.message;
-      } else {
-        return Astro.redirect('/admin/banners');
-      }
-    }
-  }
-}
 ---
 
 <AdminLayout title="Edit Banner">
   <div class="max-w-[800px] bg-white p-6 rounded-lg border border-sand shadow-brand-sm">
     <h2 class="mt-0 mb-6 text-emerald-dark font-display text-2xl">Edit Banner</h2>
     
-    {error && (
-      <div class="bg-red-600 text-white p-3 rounded-md mb-4 text-sm">
-        {error}
-      </div>
-    )}
-
-    <form method="POST" enctype="multipart/form-data">
+    <form id="banner-form" data-id={banner.id} method="POST" enctype="multipart/form-data">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="mb-4">
           <label class="block mb-2 font-semibold text-sm text-charcoal">Judul (ID) *</label>
@@ -160,3 +90,43 @@ if (Astro.request.method === 'POST') {
     </form>
   </div>
 </AdminLayout>
+
+<script>
+  import { showToast } from '@/lib/admin-toast';
+
+  const form = document.getElementById('banner-form') as HTMLFormElement;
+  const submitBtn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+
+  form.addEventListener('submit', async (e: SubmitEvent) => {
+    e.preventDefault();
+
+    const fd = new FormData(form);
+    const title = (fd.get('title') as string)?.trim();
+
+    if (!title) {
+      showToast('Judul wajib diisi.', 'error');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    const originalText = submitBtn.textContent || 'Update Banner';
+    submitBtn.textContent = 'Menyimpan…';
+
+    try {
+      const res = await fetch(`/api/admin/banners/${form.dataset.id}`, { method: 'POST', body: fd });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Gagal memperbarui banner.');
+      }
+
+      showToast('Banner berhasil diperbarui.', 'success');
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Terjadi kesalahan.', 'error');
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+    }
+  });
+</script>

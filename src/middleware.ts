@@ -21,7 +21,7 @@ export const onRequest = defineMiddleware(async ({ locals, request, url, cookies
     return rewrite(target);
   }
 
-  const needsAuth = pathname.startsWith('/admin') || pathname.startsWith('/api/auth');
+  const needsAuth = pathname.startsWith('/admin') || pathname.startsWith('/api/auth') || pathname.startsWith('/api/admin');
 
   if (needsAuth) {
     // Initialize Supabase ONLY for auth routes to avoid cookie warnings during static build

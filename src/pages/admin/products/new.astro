@@ -3,64 +3,9 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 
 export const prerender = false;
 
-let error = '';
 const { supabase } = Astro.locals;
 
 const { data: categories } = await supabase.from('categories').select('id, name').order('name');
-
-if (Astro.request.method === 'POST') {
-  const formData = await Astro.request.formData();
-
-  const name                 = formData.get('name') as string;
-  const name_en              = formData.get('name_en') as string;
-  const slug                 = formData.get('slug') as string;
-  const category_id          = formData.get('category_id') as string;
-  const price                = parseInt(formData.get('price') as string) || 0;
-  const price_max            = parseInt(formData.get('price_max') as string) || null;
-  const short_description    = formData.get('short_description') as string;
-  const short_description_en = formData.get('short_description_en') as string;
-  const description          = formData.get('description') as string;
-  const description_en       = formData.get('description_en') as string;
-  const is_active            = formData.get('is_active') === 'on';
-  const is_featured          = formData.get('is_featured') === 'on';
-  const sort_order           = parseInt(formData.get('sort_order') as string) || 0;
-  const image                = formData.get('image') as File;
-
-  if (!name || !slug || !category_id) {
-    error = 'Nama, Slug, dan Kategori wajib diisi.';
-  } else {
-    let image_url = '';
-
-    if (image && image.size > 0) {
-      const fileExt  = image.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).slice(2, 15)}_${Date.now()}.${fileExt}`;
-      const filePath = `products/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage.from('products').upload(filePath, image);
-
-      if (uploadError) {
-        error = `Gagal upload gambar: ${uploadError.message}`;
-      } else {
-        const { data: urlData } = supabase.storage.from('products').getPublicUrl(filePath);
-        image_url = urlData.publicUrl;
-      }
-    }
-
-    if (!error) {
-      const { error: insertError } = await supabase.from('products').insert([{
-        name, name_en, slug, category_id, price, price_max,
-        short_description, short_description_en, description, description_en,
-        image_url: image_url || null, is_active, is_featured, sort_order,
-      }]);
-
-      if (insertError) {
-        error = insertError.message;
-      } else {
-        return Astro.redirect('/admin/products?success=' + encodeURIComponent('Produk berhasil ditambahkan'));
-      }
-    }
-  }
-}
 ---
 
 <AdminLayout title="Tambah Produk">
@@ -76,15 +21,6 @@ if (Astro.request.method === 'POST') {
 
     <div class="pf-card">
       <h2 class="pf-heading">Produk Baru</h2>
-
-      {error && (
-        <div class="pf-error" role="alert">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
-          </svg>
-          {error}
-        </div>
-      )}
 
       <form id="product-form" method="POST" enctype="multipart/form-data" novalidate>
 
@@ -243,12 +179,8 @@ if (Astro.request.method === 'POST') {
 
   // ── Form submission ────────────────────────────────────────
   form.addEventListener('submit', async (e: SubmitEvent) => {
-    // No cropped image → let the browser submit normally (Astro handles it server-side)
-    if (!croppedBlob) return;
-
     e.preventDefault();
 
-    // Quick client-side validation before fetch
     const fd = new FormData(form);
     const name       = (fd.get('name')        as string)?.trim();
     const slug       = (fd.get('slug')        as string)?.trim();
@@ -259,31 +191,28 @@ if (Astro.request.method === 'POST') {
       return;
     }
 
-    // Replace file field with the cropped blob
-    fd.set('image', croppedBlob, 'product-image.jpg');
+    if (croppedBlob) {
+      fd.set('image', croppedBlob, 'product-image.jpg');
+    }
 
     submitBtn.disabled    = true;
     submitBtn.textContent = 'Menyimpan…';
 
     try {
-      const res = await fetch(window.location.href, {
-        method:   'POST',
-        body:     fd,
-        redirect: 'follow',
+      const res = await fetch('/api/admin/products', {
+        method: 'POST',
+        body:   fd,
       });
+      const data = await res.json();
 
-      if (res.redirected || res.ok) {
-        // Build success URL (add toast param if not already on products page)
-        const successUrl = new URL('/admin/products', window.location.href);
-        successUrl.searchParams.set('success', 'Produk berhasil ditambahkan');
-        window.location.href = successUrl.toString();
-      } else {
-        showToast('Terjadi kesalahan. Periksa kembali data produk.', 'error');
-        submitBtn.disabled    = false;
-        submitBtn.textContent = 'Simpan Produk';
+      if (!res.ok) {
+        throw new Error(data.error || 'Gagal menyimpan produk.');
       }
-    } catch {
-      showToast('Terjadi kesalahan jaringan. Coba lagi.', 'error');
+
+      showToast('Produk berhasil ditambahkan.', 'success');
+      setTimeout(() => { window.location.href = '/admin/products'; }, 800);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Terjadi kesalahan jaringan. Coba lagi.', 'error');
       submitBtn.disabled    = false;
       submitBtn.textContent = 'Simpan Produk';
     }

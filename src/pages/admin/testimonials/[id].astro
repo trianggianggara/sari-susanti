@@ -3,7 +3,6 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 
 export const prerender = false;
 
-let error = '';
 const { id } = Astro.params;
 const { supabase } = Astro.locals;
 
@@ -17,82 +16,13 @@ const { data: testimonial, error: fetchError } = await supabase
 if (fetchError || !testimonial) {
   return Astro.redirect('/admin/testimonials');
 }
-
-if (Astro.request.method === 'POST') {
-  const formData = await Astro.request.formData();
-  
-  const customer_name = formData.get('customer_name') as string;
-  const customer_role = formData.get('customer_role') as string;
-  const content = formData.get('content') as string;
-  const content_en = formData.get('content_en') as string;
-  const rating = parseInt(formData.get('rating') as string) || 5;
-  const event_type = formData.get('event_type') as string;
-  
-  const is_active = formData.get('is_active') === 'on';
-  const is_featured = formData.get('is_featured') === 'on';
-  const sort_order = parseInt(formData.get('sort_order') as string) || 0;
-  
-  const image = formData.get('image') as File;
-
-  if (!customer_name || !content) {
-    error = 'Nama pelanggan dan isi testimoni wajib diisi.';
-  } else {
-    let customer_image_url = testimonial.customer_image_url;
-    
-    // Upload image
-    if (image && image.size > 0) {
-      const fileExt = image.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('testimonials')
-        .upload(filePath, image);
-        
-      if (uploadError) {
-        error = `Gagal upload gambar: ${uploadError.message}`;
-      } else {
-        const { data: publicUrlData } = supabase.storage.from('testimonials').getPublicUrl(filePath);
-        customer_image_url = publicUrlData.publicUrl;
-      }
-    }
-
-    if (!error) {
-      const { error: updateError } = await supabase.from('testimonials').update({
-        customer_name,
-        customer_role,
-        customer_image_url,
-        content,
-        content_en,
-        rating,
-        event_type,
-        is_active,
-        is_featured,
-        sort_order,
-        updated_at: new Date().toISOString()
-      }).eq('id', id);
-
-      if (updateError) {
-        error = updateError.message;
-      } else {
-        return Astro.redirect('/admin/testimonials');
-      }
-    }
-  }
-}
 ---
 
 <AdminLayout title="Edit Testimoni">
   <div class="max-w-[800px] bg-white p-6 rounded-lg border border-sand shadow-brand-sm">
     <h2 class="mt-0 mb-6 text-emerald-dark font-display text-2xl">Edit Testimoni</h2>
     
-    {error && (
-      <div class="bg-red-600 text-white p-3 rounded-md mb-4 text-sm">
-        {error}
-      </div>
-    )}
-
-    <form method="POST" enctype="multipart/form-data">
+    <form id="testimonial-form" data-id={testimonial.id} method="POST" enctype="multipart/form-data">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="mb-4">
           <label class="block mb-2 font-semibold text-sm text-charcoal">Nama Pelanggan *</label>
@@ -159,3 +89,44 @@ if (Astro.request.method === 'POST') {
     </form>
   </div>
 </AdminLayout>
+
+<script>
+  import { showToast } from '@/lib/admin-toast';
+
+  const form = document.getElementById('testimonial-form') as HTMLFormElement;
+  const submitBtn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+
+  form.addEventListener('submit', async (e: SubmitEvent) => {
+    e.preventDefault();
+
+    const fd = new FormData(form);
+    const customer_name = (fd.get('customer_name') as string)?.trim();
+    const content = (fd.get('content') as string)?.trim();
+
+    if (!customer_name || !content) {
+      showToast('Nama pelanggan dan isi testimoni wajib diisi.', 'error');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    const originalText = submitBtn.textContent || 'Update Testimoni';
+    submitBtn.textContent = 'Menyimpan…';
+
+    try {
+      const res = await fetch(`/api/admin/testimonials/${form.dataset.id}`, { method: 'POST', body: fd });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Gagal memperbarui testimoni.');
+      }
+
+      showToast('Testimoni berhasil diperbarui.', 'success');
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Terjadi kesalahan.', 'error');
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+    }
+  });
+</script>

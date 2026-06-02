@@ -6,8 +6,6 @@ export const prerender = false;
 const { id } = Astro.params;
 const { supabase } = Astro.locals;
 
-let error = '';
-
 // Fetch existing data
 const { data: category, error: fetchError } = await supabase
   .from('categories')
@@ -18,50 +16,13 @@ const { data: category, error: fetchError } = await supabase
 if (fetchError || !category) {
   return Astro.redirect('/admin/categories');
 }
-
-if (Astro.request.method === 'POST') {
-  const formData = await Astro.request.formData();
-  const name = formData.get('name') as string;
-  const name_en = formData.get('name_en') as string;
-  const slug = formData.get('slug') as string;
-  const is_active = formData.get('is_active') === 'on';
-  const sort_order = parseInt(formData.get('sort_order') as string) || 0;
-
-  if (!name || !slug) {
-    error = 'Nama dan Slug wajib diisi.';
-  } else {
-    const { error: updateError } = await supabase
-      .from('categories')
-      .update({
-        name,
-        name_en,
-        slug,
-        is_active,
-        sort_order,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id);
-
-    if (updateError) {
-      error = updateError.message;
-    } else {
-      return Astro.redirect('/admin/categories');
-    }
-  }
-}
 ---
 
 <AdminLayout title="Edit Kategori">
   <div class="max-w-[600px] bg-white p-6 rounded-lg border border-sand shadow-brand-sm">
     <h2 class="mt-0 mb-6 text-emerald-dark font-display text-2xl">Edit Kategori</h2>
     
-    {error && (
-      <div class="bg-red-600 text-white p-3 rounded-md mb-4 text-sm">
-        {error}
-      </div>
-    )}
-
-    <form method="POST">
+    <form id="category-form" data-id={category.id} method="POST">
       <div class="mb-4">
         <label class="block mb-2 font-semibold text-sm text-charcoal">Nama (ID) *</label>
         <input type="text" name="name" value={category.name} required class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none" />
@@ -96,3 +57,44 @@ if (Astro.request.method === 'POST') {
     </form>
   </div>
 </AdminLayout>
+
+<script>
+  import { showToast } from '@/lib/admin-toast';
+
+  const form = document.getElementById('category-form') as HTMLFormElement;
+  const submitBtn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+
+  form.addEventListener('submit', async (e: SubmitEvent) => {
+    e.preventDefault();
+
+    const fd = new FormData(form);
+    const name = (fd.get('name') as string)?.trim();
+    const slug = (fd.get('slug') as string)?.trim();
+
+    if (!name || !slug) {
+      showToast('Nama dan Slug wajib diisi.', 'error');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    const originalText = submitBtn.textContent || 'Update';
+    submitBtn.textContent = 'Menyimpan…';
+
+    try {
+      const res = await fetch(`/api/admin/categories/${form.dataset.id}`, { method: 'POST', body: fd });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Gagal memperbarui kategori.');
+      }
+
+      showToast('Kategori berhasil diperbarui.', 'success');
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Terjadi kesalahan.', 'error');
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+    }
+  });
+</script>

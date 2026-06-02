@@ -2,55 +2,13 @@
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 
 export const prerender = false;
-
-let error = '';
-const { supabase } = Astro.locals;
-
-if (Astro.request.method === 'POST') {
-  const formData = await Astro.request.formData();
-  
-  const question = formData.get('question') as string;
-  const question_en = formData.get('question_en') as string;
-  const answer = formData.get('answer') as string;
-  const answer_en = formData.get('answer_en') as string;
-  const category = formData.get('category') as string;
-  
-  const is_active = formData.get('is_active') === 'on';
-  const sort_order = parseInt(formData.get('sort_order') as string) || 0;
-
-  if (!question || !answer) {
-    error = 'Pertanyaan dan Jawaban wajib diisi.';
-  } else {
-    const { error: insertError } = await supabase.from('faqs').insert([{
-      question,
-      question_en,
-      answer,
-      answer_en,
-      category,
-      is_active,
-      sort_order
-    }]);
-
-    if (insertError) {
-      error = insertError.message;
-    } else {
-      return Astro.redirect('/admin/faqs');
-    }
-  }
-}
 ---
 
 <AdminLayout title="Tambah FAQ">
   <div class="max-w-[800px] bg-white p-6 rounded-lg border border-sand shadow-brand-sm">
     <h2 class="mt-0 mb-6 text-emerald-dark font-display text-2xl">FAQ Baru</h2>
     
-    {error && (
-      <div class="bg-red-600 text-white p-3 rounded-md mb-4 text-sm">
-        {error}
-      </div>
-    )}
-
-    <form method="POST">
+    <form id="faq-form" method="POST">
       <div class="mb-4">
         <label class="block mb-2 font-semibold text-sm text-charcoal">Grup Kategori FAQ</label>
         <input type="text" name="category" placeholder="Contoh: Pemesanan, Pengiriman, dll" class="w-full p-3 border border-sand rounded-sm box-border font-body text-base transition-all duration-150 focus:border-gold focus:ring-4 focus:ring-gold-glass focus:outline-none" />
@@ -96,3 +54,43 @@ if (Astro.request.method === 'POST') {
     </form>
   </div>
 </AdminLayout>
+
+<script>
+  import { showToast } from '@/lib/admin-toast';
+
+  const form = document.getElementById('faq-form') as HTMLFormElement;
+  const submitBtn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+
+  form.addEventListener('submit', async (e: SubmitEvent) => {
+    e.preventDefault();
+
+    const fd = new FormData(form);
+    const question = (fd.get('question') as string)?.trim();
+    const answer = (fd.get('answer') as string)?.trim();
+
+    if (!question || !answer) {
+      showToast('Pertanyaan dan Jawaban wajib diisi.', 'error');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    const originalText = submitBtn.textContent || 'Simpan FAQ';
+    submitBtn.textContent = 'Menyimpan…';
+
+    try {
+      const res = await fetch('/api/admin/faqs', { method: 'POST', body: fd });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Gagal menyimpan FAQ.');
+      }
+
+      showToast('FAQ berhasil ditambahkan.', 'success');
+      setTimeout(() => { window.location.href = '/admin/faqs'; }, 800);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Terjadi kesalahan.', 'error');
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+    }
+  });
+</script>

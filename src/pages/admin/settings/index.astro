@@ -23,40 +23,6 @@ const SETTINGS_SCHEMA = [
 // Flatten keys for easy iteration
 const ALL_KEYS = SETTINGS_SCHEMA.flatMap((g) => g.fields.map((f) => f.key));
 
-let error = '';
-
-// ── Handle POST ──
-if (Astro.request.method === 'POST') {
-  const formData = await Astro.request.formData();
-
-  // Build updates
-  const updates = ALL_KEYS.map((key) => {
-    if (key === 'promo_banner_active') {
-      return { key, value: formData.get(key) === 'on' ? 'true' : 'false' };
-    }
-    return { key, value: (formData.get(key) as string) ?? '' };
-  });
-
-  // Upsert each setting (update if exists)
-  let hasError = false;
-  for (const { key, value } of updates) {
-    const { error: upsertError } = await supabase
-      .from('site_settings')
-      .update({ value, updated_at: new Date().toISOString() })
-      .eq('key', key);
-
-    if (upsertError) {
-      console.error(`Failed to update setting ${key}:`, upsertError);
-      hasError = true;
-    }
-  }
-
-  if (hasError) {
-    return Astro.redirect('/admin/settings?error=Pengaturan+berhasil+disimpan+sebagian.+Silakan+periksa+kembali.');
-  }
-  return Astro.redirect('/admin/settings?success=Pengaturan+berhasil+disimpan.');
-}
-
 // ── Fetch current values ──
 const { data: settingsRows, error: fetchError } = await supabase
   .from('site_settings')
@@ -87,13 +53,7 @@ function getValue(key: string, type: 'text' | 'checkbox'): string | boolean {
       <h2 class="m-0 font-display text-emerald-dark text-2xl">Pengaturan Situs</h2>
     </div>
 
-    {error && (
-      <div class="bg-red-600 text-white p-3 rounded-md mb-4 text-sm">
-        {error}
-      </div>
-    )}
-
-    <form method="POST" class="space-y-6">
+    <form id="settings-form" method="POST" class="space-y-6">
       {SETTINGS_SCHEMA.map((group) => (
         <div class="bg-white rounded-lg border border-sand shadow-brand-sm overflow-hidden">
           <div class="px-6 py-4 border-b border-sand bg-ivory-warm">
@@ -156,3 +116,37 @@ function getValue(key: string, type: 'text' | 'checkbox'): string | boolean {
     </form>
   </div>
 </AdminLayout>
+
+<script>
+  import { showToast } from '@/lib/admin-toast';
+
+  const form = document.getElementById('settings-form') as HTMLFormElement;
+  const submitBtn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+
+  form.addEventListener('submit', async (e: SubmitEvent) => {
+    e.preventDefault();
+
+    const fd = new FormData(form);
+
+    submitBtn.disabled = true;
+    const originalText = submitBtn.textContent || 'Simpan Perubahan';
+    submitBtn.textContent = 'Menyimpan…';
+
+    try {
+      const res = await fetch('/api/admin/settings', { method: 'POST', body: fd });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Gagal menyimpan pengaturan.');
+      }
+
+      showToast('Pengaturan berhasil disimpan.', 'success');
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Terjadi kesalahan.', 'error');
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+    }
+  });
+</script>
