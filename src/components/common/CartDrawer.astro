@@ -77,6 +77,8 @@ const isEn = locale === 'en';
   </div>
 </aside>
 
+
+
 <!-- Cart Toggle Button (floating, shown on all pages) -->
 <button class="cart-fab" id="cart-fab" aria-label={isEn ? 'View cart' : 'Lihat keranjang'} style="display:none;">
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -261,10 +263,15 @@ const isEn = locale === 'en';
       }
     });
 
-    clearBtn?.addEventListener('click', () => {
-      if (confirm(isEn ? 'Clear all items?' : 'Kosongkan semua pesanan?')) {
-        saveItems([]);
-      }
+    clearBtn?.addEventListener('click', async () => {
+      const { showConfirmDialog } = await import('/src/lib/admin-dialog.ts');
+      const msg = isEn
+        ? 'All items in your cart will be removed. This cannot be undone.'
+        : 'Semua item dalam keranjang akan dihapus. Tindakan ini tidak bisa dibatalkan.';
+      const label = isEn ? 'Yes, Clear' : 'Ya, Kosongkan';
+      const title = isEn ? 'Clear Order?' : 'Kosongkan Pesanan?';
+      const confirmed = await showConfirmDialog(msg, { title, confirmLabel: label });
+      if (confirmed) saveItems([]);
     });
 
     // ── Init & reactive updates ───────────────────────────────────
@@ -547,6 +554,7 @@ const isEn = locale === 'en';
 .cart-footer__clear:hover {
   color: #c0392b;
 }
+
 
 /* ── FAB (Floating Cart Button) ── */
 .cart-fab {
