@@ -264,7 +264,7 @@ const isEn = locale === 'en';
     });
 
     clearBtn?.addEventListener('click', async () => {
-      const { showConfirmDialog } = await import('/src/lib/admin-dialog.ts');
+      const { showConfirmDialog } = await import('/src/lib/dialog.ts');
       const msg = isEn
         ? 'All items in your cart will be removed. This cannot be undone.'
         : 'Semua item dalam keranjang akan dihapus. Tindakan ini tidak bisa dibatalkan.';
